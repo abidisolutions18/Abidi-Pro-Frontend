@@ -48,6 +48,8 @@ const Navbar = () => {
     { name: "Team", to: "/team", icon: UserGroupIcon },
     { name: "Projects", to: "/projects", icon: FolderIcon },
     { name: "Calendar", to: "/calendar", icon: CalendarDaysIcon },
+
+    
   ];
 
   return (
@@ -60,7 +62,8 @@ const Navbar = () => {
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 type="button"
-                className="inline-flex items-center justify-center rounded-md p-2 text-white hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+                style={{ backgroundColor: "rgba(var(--color-primary-rgb), 0.3)" }}
+                className="inline-flex items-center justify-center rounded-md p-2 text-white hover:bg-primary focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
               >
                 <svg
                   className={`${mobileMenuOpen ? "hidden" : "block"} size-6`}

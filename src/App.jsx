@@ -4,7 +4,7 @@ import ThemeSelector from "./Pages/ThemeSelector";
 import PeopleLayout from "./Pages/People/PeopleLayout";
 import Home from "./Pages/People/Home";
 import TimeTracker from "./Pages/People/TimeTracker";
-import Files from "../src/Pages/People/Files";
+import Files from "./Pages/People/files/Files";
 
 function App() {
   return (

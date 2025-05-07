@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardBody } from "@material-tailwind/react";
-
 import FeedsCard from "../People/cards/FeedsCard";
 import AttendanceCard from "../People/cards/AttendanceCard";
 import HolidaysCard from "../People/cards/HolidaysCard";
@@ -14,7 +13,7 @@ import LeaveLogCard from "./cards/LeaveLogCard";
 const Home = () => {
   const [time, setTime] = useState({ hours: "00", minutes: "00", period: "AM" });
   const [cards, setCards] = useState([]);
-  const weeklyHours = [3, 4, 2, 6, 7, 1, 3];
+  
 
   const addCard = (type) => {
     if (!cards.find((c) => c.type === type)) {
@@ -30,8 +29,18 @@ const Home = () => {
     const props = { key: card.id, onDelete: () => removeCard(card.id) };
     switch (card.type) {
       case "feeds": return <FeedsCard {...props} />;
-      case "attendance":
-        return <AttendanceCard weeklyData={weeklyHours} onDelete={props.onDelete} />;
+      case "attendance": {
+        const sampleData = [
+          { day: "Mon", hours: 6 },
+          { day: "Tue", hours: 8 },
+          { day: "Wed", hours: 4 },
+          { day: "Thu", hours: 2 },
+          { day: "Fri", hours: 7 },
+          { day: "Sat", hours: 0 },
+          { day: "Sun", hours: 5 },
+        ];
+        return <AttendanceCard weeklyData={sampleData} onDelete={props.onDelete} />;
+      }
       case "holidays": return <HolidaysCard {...props} />;
       case "todo": return <ToDoCard {...props} />;
       case "notes": return <NotesCard {...props} />;
@@ -53,13 +62,17 @@ const Home = () => {
       setTime({ hours: hours.toString().padStart(2, "0"), minutes, period });
     };
 
+    
+
     updateTime();
     const interval = setInterval(updateTime, 60000);
     return () => clearInterval(interval);
   }, []);
 
+  
+
   return (
-    <Card className="overflow-hidden bg-primary p-5 border m-4 shadow-sm min-h-[700px]">
+    <Card className="overflow-hidden bg-primary p-5 border m-4 shadow-sm min-h-[700px] border-none">
       <CardBody className="bg-background rounded-lg border-0 shadow-sm flex items-center justify-between gap-4 p-3 sm:p-5 md:p-6">
         {/* Greeting */}
         <div className="flex items-center gap-3 sm:gap-4 min-w-0">
@@ -67,8 +80,8 @@ const Home = () => {
             P
           </div>
           <div className="truncate">
-            <h2 className="text-xl font-semibold truncate">Hey, Paul!</h2>
-            <p className="text-gray-600 text-sm">Have a great day</p>
+            <h2 className="text-xl text-heading font-semibold truncate">Hey, Paul!</h2>
+            <p className="text-description text-sm">Have a great day</p>
           </div>
         </div>
 

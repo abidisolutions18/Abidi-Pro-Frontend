@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { EllipsisVerticalIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { FiMoreVertical, FiTrash2, FiActivity } from "react-icons/fi"; // All icons from React Icons
 
 const feedsData = [
   {
@@ -37,17 +37,17 @@ const FeedsCard = ({ onDelete }) => {
   }, []);
 
   return (
-    <div className="relative bg-white rounded-xl shadow-md p-5 pt-10 overflow-visible">
-      {/* Icon top left */}
-      <div className="absolute -top-4 left-4 bg-green-200 text-green-800 w-10 h-10 flex items-center justify-center rounded-md shadow z-10">
-        <span className="text-xl">📶</span>
+    <div className="relative bg-background rounded-xl shadow-md p-5 pt-10 overflow-visible">
+      {/* Icon top left (replaced emoji with FiActivity icon) */}
+      <div className="absolute -top-4 left-4 bg-green-200 text-green-800 w-10 h-10 flex items-center justify-center rounded-md shadow z-99">
+        <FiActivity className="text-xl" />
       </div>
 
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h2 className="text-lg font-semibold">Feeds</h2>
-          <p className="text-green-600 text-sm font-medium">4+ unread messages</p>
+          <h2 className="text-lg text-text font-semibold">Feeds</h2>
+          <p className="text-cardDescription text-sm font-medium">4+ unread messages</p>
         </div>
 
         {/* Custom Dropdown Menu */}
@@ -56,7 +56,7 @@ const FeedsCard = ({ onDelete }) => {
             onClick={() => setMenuOpen(!menuOpen)}
             className="p-2 rounded-md hover:bg-gray-100 transition"
           >
-            <EllipsisVerticalIcon className="h-5 w-5 text-gray-600" />
+            <FiMoreVertical className="h-5 w-5 text-gray-600" />
           </button>
 
           {menuOpen && (
@@ -68,7 +68,7 @@ const FeedsCard = ({ onDelete }) => {
                 }}
                 className="flex items-center w-full px-4 py-2 text-sm text-red-500 hover:bg-gray-100"
               >
-                <TrashIcon className="w-4 h-4 mr-2" />
+                <FiTrash2 className="w-4 h-4 mr-2" />
                 Delete Card
               </button>
             </div>
@@ -81,13 +81,14 @@ const FeedsCard = ({ onDelete }) => {
         {feedsData.map((item, index) => (
           <li
             key={index}
-            className="bg-gray-100 rounded px-4 py-3 flex items-center justify-between gap-3"
+            style={{ backgroundColor: "rgba(var(--color-primary-rgb), 0.3)" }}
+            className="bg-primary rounded px-4 py-3 flex items-center justify-between gap-3"
           >
             {/* Message + optional description */}
             <div className="min-w-0">
-              <span className="font-medium text-gray-900">{item.message}</span>
+              <span className="font-medium text-text">{item.message}</span>
               {item.description && (
-                <div className="text-gray-600 text-sm">{item.description}</div>
+                <div className="text-description text-sm">{item.description}</div>
               )}
             </div>
 

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
-  TrashIcon,
-  PlusIcon,
-  PencilIcon,
-  EllipsisVerticalIcon,
-} from "@heroicons/react/24/solid";
+  FiTrash2,
+  FiPlus,
+  FiEdit2,
+  FiMoreVertical,
+  FiCheckSquare,
+} from "react-icons/fi";
 
 const defaultTasks = [
   {
@@ -67,9 +68,7 @@ const ToDoCard = ({ onDelete }) => {
   };
 
   const toggleComplete = (id) => {
-    setTasks(tasks.map((t) =>
-      t.id === id ? { ...t, completed: !t.completed } : t
-    ));
+    setTasks(tasks.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)));
   };
 
   const removeTask = (id) => {
@@ -77,25 +76,23 @@ const ToDoCard = ({ onDelete }) => {
   };
 
   const handleFieldChange = (id, field, value) => {
-    setTasks(tasks.map((t) =>
-      t.id === id ? { ...t, [field]: value } : t
-    ));
+    setTasks(tasks.map((t) => (t.id === id ? { ...t, [field]: value } : t)));
   };
 
   const handleBlur = () => setEditing(null);
 
   return (
-    <div className="relative bg-white rounded-xl shadow-md p-5 pt-10 overflow-visible w-full">
+    <div className="relative bg-background rounded-xl shadow-md p-5 pt-10 overflow-visible w-full">
       {/* Floating Icon */}
       <div className="absolute -top-4 left-4 bg-green-200 text-green-800 w-10 h-10 flex items-center justify-center rounded-md shadow z-10">
-        <span className="text-lg">✅</span>
+        <FiCheckSquare className="text-lg" />
       </div>
 
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h2 className="text-xl font-semibold">To-Do</h2>
-          <p className="text-sm text-blue-600 font-medium cursor-pointer">
+          <h2 className="text-xl text-text font-semibold">To-Do</h2>
+          <p className="text-sm text-cardDescription font-medium cursor-pointer">
             Enter Your to do list here
           </p>
         </div>
@@ -106,7 +103,7 @@ const ToDoCard = ({ onDelete }) => {
             onClick={() => setMenuOpen(!menuOpen)}
             className="p-2 rounded-md hover:bg-gray-100 transition"
           >
-            <EllipsisVerticalIcon className="h-5 w-5 text-gray-600" />
+            <FiMoreVertical className="h-5 w-5 text-gray-600" />
           </button>
 
           {menuOpen && (
@@ -118,7 +115,7 @@ const ToDoCard = ({ onDelete }) => {
                 }}
                 className="flex items-center w-full px-4 py-2 text-sm text-red-500 hover:bg-gray-100"
               >
-                <TrashIcon className="w-4 h-4 mr-2" />
+                <FiTrash2 className="w-4 h-4 mr-2" />
                 Delete Card
               </button>
             </div>
@@ -132,7 +129,7 @@ const ToDoCard = ({ onDelete }) => {
           onClick={() => setShowAddForm(true)}
           className="mb-4 text-sm text-green-600 hover:text-green-800 flex items-center gap-1"
         >
-          <PlusIcon className="h-5 w-5" />
+          <FiPlus className="h-5 w-5" />
           Add Task
         </button>
       ) : (
@@ -171,8 +168,9 @@ const ToDoCard = ({ onDelete }) => {
         {tasks.map((task) => (
           <li
             key={task.id}
+            style={{ backgroundColor: "rgba(var(--color-primary-rgb), 0.3)" }}
             className={`rounded p-4 flex flex-wrap justify-between items-start gap-4 ${
-              task.completed ? "bg-green-100" : "bg-gray-100"
+              task.completed ? "bg-completed" : "bg-primary"
             }`}
           >
             <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -194,7 +192,7 @@ const ToDoCard = ({ onDelete }) => {
                       onBlur={handleBlur}
                     />
                     <input
-                      className="text-xs text-gray-600 bg-white px-2 py-1 rounded border w-full mb-1"
+                      className="text-xs text-description bg-white px-2 py-1 rounded border w-full mb-1"
                       value={task.description}
                       onChange={(e) =>
                         handleFieldChange(task.id, "description", e.target.value)
@@ -215,22 +213,20 @@ const ToDoCard = ({ onDelete }) => {
                   <>
                     <div
                       className={`font-semibold cursor-pointer ${
-                        task.completed
-                          ? "line-through text-gray-400"
-                          : "text-gray-800"
+                        task.completed ? "line-through text-text" : "text-text"
                       }`}
                       onClick={() => setEditing(task.id)}
                     >
                       {task.title}
                     </div>
                     <div
-                      className="text-xs text-gray-600 cursor-pointer"
+                      className="text-xs text-text cursor-pointer"
                       onClick={() => setEditing(task.id)}
                     >
                       {task.description}
                     </div>
                     {task.dueDate && (
-                      <div className="text-xs text-gray-500 mt-1">
+                      <div className="text-xs text-description mt-1">
                         Due: {task.dueDate}
                       </div>
                     )}
@@ -239,7 +235,7 @@ const ToDoCard = ({ onDelete }) => {
               </div>
             </div>
 
-            {/* Edit + Delete Buttons Vertical */}
+            {/* Edit + Delete Buttons */}
             <div className="flex flex-col gap-2 items-end">
               {!task.completed && (
                 <button
@@ -247,7 +243,7 @@ const ToDoCard = ({ onDelete }) => {
                   className="bg-green-100 text-green-700 p-1 rounded hover:bg-green-200"
                   title="Edit"
                 >
-                  <PencilIcon className="h-4 w-4" />
+                  <FiEdit2 className="h-4 w-4" />
                 </button>
               )}
               <button
@@ -255,7 +251,7 @@ const ToDoCard = ({ onDelete }) => {
                 className="bg-red-100 text-red-600 p-1 rounded hover:bg-red-200"
                 title="Delete"
               >
-                <TrashIcon className="h-4 w-4" />
+                <FiTrash2 className="h-4 w-4" />
               </button>
             </div>
           </li>

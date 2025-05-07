@@ -1,64 +1,97 @@
-// import React from "react";
-// import CardWrapper from "./CardWrapper";
-
-// const AttendanceCard = ({ onDelete }) => {
-//   const hours = 28;
-//   const chartBars = [3, 4, 2, 6, 7, 1, 3]; // Mocked weekly hours
-
-//   return (
-//     <CardWrapper title="Weekly Attendance" icon="📊" onDelete={onDelete}>
-//       <p className="text-sm text-gray-600 mb-2">{hours} hours</p>
-//       <div className="flex gap-1 items-end h-24">
-//         {chartBars.map((val, i) => (
-//           <div
-//             key={i}
-//             className="w-3 bg-green-400 rounded"
-//             style={{ height: `${val * 15}px` }}
-//           />
-//         ))}
-//       </div>
-//     </CardWrapper>
-//   );
-// };
-
-// export default AttendanceCard;
-import React from "react";
-import CardWrapper from "./CardWrapper";
+import React, { useState, useEffect, useRef } from "react";
+import { GoGraph } from "react-icons/go";
+import { EllipsisVerticalIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 const AttendanceCard = ({ weeklyData = [], onDelete }) => {
-  const totalHours = weeklyData.reduce((sum, val) => sum + val, 0);
-  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const totalHours = weeklyData.reduce((sum, val) => sum + val.hours, 0);
+  const maxBarHeight = 100;
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef();
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
-    <CardWrapper title="Weekly attendance" icon="📈" onDelete={onDelete}>
-      <p className="text-md text-green-600 font-semibold mb-3">{totalHours} hours</p>
-      <div className="bg-gradient-to-r from-gray-100 to-indigo-100 p-4 rounded-lg shadow">
-        <div className="flex items-end justify-between h-40">
-          {weeklyData.map((val, i) => {
+    <div className="w-full max-w-md mx-auto bg-background rounded-2xl shadow p-4 sm:p-6 relative">
+      {/* Top Icon */}
+      <div className="absolute -top-5 left-5 bg-blue-200 text-green-800 w-10 h-10 flex items-center justify-center rounded-md shadow z-99">
+        <GoGraph />
+      </div>
+
+      {/* Header */}
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h2 className="text-lg mt-5 text-text font-semibold">Weekly Attendance</h2>
+          <p className="text-cardDescription text-sm font-medium">{totalHours} total hours</p>
+        </div>
+
+        {/* Custom Dropdown Menu */}
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="p-2 rounded-md hover:bg-gray-100 transition"
+          >
+            <EllipsisVerticalIcon className="h-5 w-5 text-gray-600" />
+          </button>
+
+          {menuOpen && (
+            <div className="absolute right-0 mt-2 w-40 bg-white shadow-md border rounded-md z-50">
+              <button
+                onClick={() => {
+                  onDelete?.();
+                  setMenuOpen(false);
+                }}
+                className="flex items-center w-full px-4 py-2 text-sm text-red-500 hover:bg-gray-100"
+              >
+                <TrashIcon className="w-4 h-4 mr-2" />
+                Delete Card
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Bar Chart */}
+      <div className="bg-primary to-indigo-100 rounded-xl px-2 py-4 sm:px-4"
+      style={{ backgroundColor: "rgba(var(--color-primary-rgb), 0.3)" }}>
+        <div className="flex items-end justify-between h-36 sm:h-44 gap-2 sm:gap-3">
+          {weeklyData.map(({ day, hours }, i) => {
             let color = "bg-gray-300";
-            if (val <= 2) color = "bg-red-500";
-            else if (val >= 7) color = "bg-green-600";
+            if (hours <= 2) color = "bg-red-500";
+            else if (hours >= 7) color = "bg-green-600";
             else color = "bg-indigo-400";
 
+            const barHeight = Math.min((hours / 10) * maxBarHeight, maxBarHeight);
+
             return (
-              <div key={i} className="flex flex-col items-center">
+              <div key={i} className="flex flex-col items-center justify-end flex-1">
                 <div
-                  className={`w-3 ${color} rounded`}
-                  style={{ height: `${val * 10}px` }}
+                  className={`w-2 sm:w-3 ${color} rounded transition-all duration-300`}
+                  style={{ height: `${barHeight}px` }}
                 ></div>
-                <span className="text-xs mt-2 text-gray-600">{days[i]}</span>
+                <div className="mt-1 text-center leading-tight">
+                  <span className="block text-[10px] sm:text-xs font-semibold text-text">
+                    {day}
+                  </span>
+                  <span className="block text-[10px] sm:text-xs text-heading">
+                    {hours}h
+                  </span>
+                </div>
               </div>
             );
           })}
         </div>
-       
       </div>
-    </CardWrapper>
+    </div>
   );
 };
 
 export default AttendanceCard;
-
-
-
-

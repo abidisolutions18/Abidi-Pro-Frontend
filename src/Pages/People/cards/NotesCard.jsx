@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import {
-  TrashIcon,
-  PencilIcon,
-  CheckIcon,
-  EllipsisVerticalIcon,
-} from "@heroicons/react/24/solid";
+  FiTrash2,
+  FiEdit2,
+  FiCheck,
+  FiMoreVertical,
+  FiEdit,
+} from "react-icons/fi";
 
 const NotesCard = ({ onDelete }) => {
   const [notes, setNotes] = useState([
@@ -18,7 +19,6 @@ const NotesCard = ({ onDelete }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef();
 
-  // Close menu when clicking outside
   useEffect(() => {
     const handler = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -52,26 +52,26 @@ const NotesCard = ({ onDelete }) => {
   };
 
   return (
-    <div className="relative bg-white rounded-xl shadow-md p-5 pt-10 w-full">
-      {/* Floating Icon */}
+    <div className="relative bg-background rounded-xl shadow-md p-5 pt-10 w-full">
+      {/* Floating Icon (replaces emoji) */}
       <div className="absolute -top-4 left-4 bg-yellow-100 text-yellow-700 w-10 h-10 flex items-center justify-center rounded-md shadow z-10">
-        📝
+        <FiEdit className="text-xl" />
       </div>
 
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h2 className="text-lg font-semibold">Notes</h2>
-          <p className="text-sm text-gray-500">Write and edit personal notes</p>
+          <h2 className="text-heading font-semibold">Notes</h2>
+          <p className="text-sm text-cardDescription">Write and edit personal notes</p>
         </div>
 
-        {/* Custom Dropdown Menu */}
+        {/* Dropdown menu */}
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="p-2 rounded-md hover:bg-gray-100 transition"
           >
-            <EllipsisVerticalIcon className="h-5 w-5 text-gray-600" />
+            <FiMoreVertical className="h-5 w-5 text-gray-600" />
           </button>
 
           {menuOpen && (
@@ -83,7 +83,7 @@ const NotesCard = ({ onDelete }) => {
                 }}
                 className="flex items-center w-full px-4 py-2 text-sm text-red-500 hover:bg-gray-100"
               >
-                <TrashIcon className="w-4 h-4 mr-2" />
+                <FiTrash2 className="w-4 h-4 mr-2" />
                 Delete Card
               </button>
             </div>
@@ -102,11 +102,11 @@ const NotesCard = ({ onDelete }) => {
           onKeyDown={(e) => e.key === "Enter" && addNote()}
         />
         <button
-  onClick={addNote}
-  className="bg-blue-100 text-blue-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-200 transition"
->
-  Add
-</button>
+          onClick={addNote}
+          className="bg-blue-100 text-blue-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-200 transition"
+        >
+          Add
+        </button>
       </div>
 
       {/* Notes List */}
@@ -114,7 +114,8 @@ const NotesCard = ({ onDelete }) => {
         {notes.map((note) => (
           <li
             key={note.id}
-            className="bg-gray-100 p-3 rounded flex justify-between items-start gap-3"
+            style={{ backgroundColor: "rgba(var(--color-primary-rgb), 0.3)" }}
+            className="bg-primary p-3 rounded flex justify-between items-start gap-3"
           >
             <div className="flex-1">
               {editingId === note.id ? (
@@ -129,7 +130,7 @@ const NotesCard = ({ onDelete }) => {
                 />
               ) : (
                 <p
-                  className="text-gray-800 cursor-pointer"
+                  className="text-text cursor-pointer"
                   onClick={() => startEditing(note)}
                 >
                   {note.text}
@@ -141,10 +142,10 @@ const NotesCard = ({ onDelete }) => {
               {editingId !== note.id ? (
                 <button
                   onClick={() => startEditing(note)}
-                  className="text-green-600 hover:text-green-800"
+                  className="bg-green-100 text-green-700 p-1 rounded hover:bg-green-200"
                   title="Edit"
                 >
-                  <PencilIcon className="h-4 w-4" />
+                  <FiEdit2 className="h-4 w-4" />
                 </button>
               ) : (
                 <button
@@ -152,15 +153,15 @@ const NotesCard = ({ onDelete }) => {
                   className="text-blue-600 hover:text-blue-800"
                   title="Save"
                 >
-                  <CheckIcon className="h-4 w-4" />
+                  <FiCheck className="h-4 w-4" />
                 </button>
               )}
               <button
                 onClick={() => removeNote(note.id)}
-                className="text-red-500 hover:text-red-700"
+                className="bg-red-100 text-red-600 p-1 rounded hover:bg-red-200"
                 title="Delete"
               >
-                <TrashIcon className="h-4 w-4" />
+                <FiTrash2 className="h-4 w-4" />
               </button>
             </div>
           </li>

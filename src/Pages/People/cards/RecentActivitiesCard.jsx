@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
-import { EllipsisVerticalIcon, TrashIcon } from "@heroicons/react/24/solid";
+import { FiMoreVertical, FiTrash2, FiClock } from "react-icons/fi";
 
-// Mock activity data with distinct color styles
 const recentActivities = [
   {
     id: 1,
@@ -24,7 +23,6 @@ const recentActivities = [
     time: "1 hour ago",
     color: "bg-red-100 text-red-700",
   },
-  
 ];
 
 const RecentActivitiesCard = ({ onDelete }) => {
@@ -42,26 +40,28 @@ const RecentActivitiesCard = ({ onDelete }) => {
   }, []);
 
   return (
-    <div className="relative bg-white rounded-xl shadow-md p-5 pt-10 w-full">
+    <div className="relative bg-background rounded-xl shadow-md p-5 pt-10 w-full">
       {/* Floating Icon */}
       <div className="absolute -top-4 left-4 bg-purple-100 text-purple-700 w-10 h-10 flex items-center justify-center rounded-md shadow z-10 text-xl">
-        🕓
+        <FiClock />
       </div>
 
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h2 className="text-lg font-semibold ">Recent Activities</h2>
-          <p className="text-sm font-medium text-purple-700">Logs of team actions & updates</p>
+          <h2 className="text-lg text-heading font-semibold">Recent Activities</h2>
+          <p className="text-sm font-medium text-cardDescription">
+            Logs of team actions & updates
+          </p>
         </div>
 
-        {/* Custom Dropdown */}
+        {/* Dropdown menu */}
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="p-2 rounded-md hover:bg-gray-100 transition"
           >
-            <EllipsisVerticalIcon className="h-5 w-5 text-gray-600" />
+            <FiMoreVertical className="h-5 w-5 text-gray-600" />
           </button>
 
           {menuOpen && (
@@ -73,7 +73,7 @@ const RecentActivitiesCard = ({ onDelete }) => {
                 }}
                 className="flex items-center w-full px-4 py-2 text-sm text-red-500 hover:bg-gray-100"
               >
-                <TrashIcon className="w-4 h-4 mr-2" />
+                <FiTrash2 className="w-4 h-4 mr-2" />
                 Delete Card
               </button>
             </div>
@@ -86,16 +86,17 @@ const RecentActivitiesCard = ({ onDelete }) => {
         {recentActivities.map((item) => (
           <li
             key={item.id}
+            style={{ backgroundColor: "rgba(var(--color-primary-rgb), 0.3)" }}
             className={`${item.color} px-4 py-3 rounded-lg flex items-start gap-3`}
           >
-            <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-full font-bold bg-white/60 ring-1 ring-black/5 text-lg">
+            <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-full font-bold bg-white ring-1 ring-black text-lg">
               {item.user[0]}
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-800">
-                <span className="text-black font-semibold">{item.user}</span> {item.action}
+              <p className="text-sm font-medium text-text">
+                <span className="font-semibold">{item.user}</span> {item.action}
               </p>
-              <span className="text-xs text-gray-600">{item.time}</span>
+              <span className="text-xs text-text">{item.time}</span>
             </div>
           </li>
         ))}

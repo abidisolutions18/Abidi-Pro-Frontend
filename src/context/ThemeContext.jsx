@@ -21,9 +21,19 @@ export const ThemeProvider = ({ children }) => {
     const root = document.documentElement;
     for (let key in theme.colors) {
       root.style.setProperty(`--color-${key}`, theme.colors[key]);
+  
+      // Add RGB version if hex
+      if (theme.colors[key].startsWith("#")) {
+        const hex = theme.colors[key].replace("#", "");
+        const r = parseInt(hex.slice(0, 2), 16);
+        const g = parseInt(hex.slice(2, 4), 16);
+        const b = parseInt(hex.slice(4, 6), 16);
+        root.style.setProperty(`--color-${key}-rgb`, `${r}, ${g}, ${b}`);
+      }
     }
     localStorage.setItem("selectedTheme", JSON.stringify(theme));
   };
+  
 
   const value = {
     themes,

@@ -29,7 +29,7 @@ const PeopleSubNavbar = () => {
             `px-3 py-2 rounded-md transition-colors duration-100 ${
               isActive
                 ? "bg-primary text-white"
-                : "text-gray-700  hover:text-text"
+                : "text-text  hover:text-text"
             }`
           }
         >
@@ -57,8 +57,8 @@ const PeopleSubNavbar = () => {
 
         {/* Contact Icons */}
         <div className="hidden lg:flex items-center space-x-4">
-          <PhoneIcon className="w-5 h-5 text-gray-600 hover:text-blue-500 cursor-pointer" />
-          <CalendarDaysIcon className="w-5 h-5 text-gray-600 hover:text-blue-500 cursor-pointer" />
+          <PhoneIcon className="w-5 h-5 text-text hover:text-blue-500 cursor-pointer" />
+          <CalendarDaysIcon className="w-5 h-5 text-text hover:text-blue-500 cursor-pointer" />
         </div>
 
         {/* Mobile menu toggle */}
