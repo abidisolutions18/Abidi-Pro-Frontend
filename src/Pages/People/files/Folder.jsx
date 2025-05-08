@@ -2,7 +2,7 @@ import React from "react";
 
 const mockFolders = {
   sharedWithMe: ["Development", "UI/UX", "Bootstrap"],
-  sharedWithRole: ["React Projects", "Design Systems"],
+  sharedWithRole: ["React Projects", "Design Systems", "UI Design", "CSS File", "Word File","PDF File"]
 };
 
 const Folder = ({ activeTab, search }) => {

@@ -1,9 +1,7 @@
-
-
- 
 import React, { useState } from "react";
 import { FiEye, FiDownload } from "react-icons/fi";
 import Folder from "./Folder"; // Make sure the path is correct
+import { CardBody } from "@material-tailwind/react";
  
 const Files = ({ data = [
   {
@@ -57,14 +55,14 @@ const Files = ({ data = [
   );
  
   return (
-    <div className="bg-primary p-4 sm:p-6 rounded-lg shadow-md w-full">
+    <div className="bg-primary p-4 sm:p-6 rounded-lg shadow-md w-full h-screen">
       {/* Tabs */}
       <div className="flex space-x-2 bg-white rounded-lg overflow-hidden mb-4 w-fit">
         <button
           onClick={() => setActiveTab("sharedWithMe")}
           className={`px-4 py-2 text-sm font-medium ${
             activeTab === "sharedWithMe"
-              ? "bg-secondary text-white"
+              ? "bg-secondary text-heading"
               : "bg-gray-100 text-gray-700"
           }`}
         >
@@ -73,9 +71,9 @@ const Files = ({ data = [
  
         <button
           onClick={() => setActiveTab("sharedWithRole")}
-          className={`px-4 py-2 text-sm font-medium ${
+          className={`px-4 py-2 text-sm font-medium ml-0${
             activeTab === "sharedWithRole"
-              ? "bg-secondary text-white"
+              ? "bg-secondary text-heading"
               : "bg-gray-100 text-gray-700"
           }`}
         >
@@ -87,7 +85,7 @@ const Files = ({ data = [
       <div className="flex flex-col sm:flex-row sm:items-center mb-5 space-y-2 sm:space-y-0 sm:space-x-4">
         <div className="flex items-center space-x-2">
           <label className="text-sm text-heading">Show</label>
-          <select className="text-sm border rounded px-2 py-1 text-heading bg-secondary">
+          <select className="text-sm px-2 py-1 text-heading bg-secondary rounded-md">
             <option className="text-gray-700">10</option>
             <option className="text-gray-700">25</option>
             <option className="text-gray-700">50</option>
@@ -98,7 +96,7 @@ const Files = ({ data = [
         <input
           type="text"
           placeholder=" Search..."
-          className="border px-3 py-1.5 rounded w-full sm:w-64 text-sm bg-secondary text-description"
+          className="border-0 px-3 py-1.5 rounded-md w-full sm:w-64 text-sm bg-secondary text-description"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -107,7 +105,8 @@ const Files = ({ data = [
       {/* Conditional Rendering */}
       {activeTab === "sharedWithMe" ? (
         <div className="overflow-x-auto ">
-          <table className="min-w-full bg-secondary text-sm">
+          <CardBody className="bg-background rounded-lg shadow-md p-3">
+          <table className="min-w-full bg-background text-sm  ">
             <thead className=" text-heading">
               <tr >
                 <th className="text-left py-2 px-4">Files</th>
@@ -122,10 +121,10 @@ const Files = ({ data = [
                 <tr
                   key={index} 
                 
-                  className={index % 2 === 0 ? "bg-primary  " : "bg-secondary"}
+                  className={index % 2 === 0 ? "bg-primary  " : "bg-background"}
                 >
-                  <td className="py-2 px-4 text-description  ">{data.name}</td>
-                  <td className="py-2 px-4">{data.sharedBy}</td>
+                  <td className="py-2 px-4">{data.name}</td>
+                  <td className="py-2 px-4 ">{data.sharedBy}</td>
                   <td className="py-2 px-4">{data.sharedOn}</td>
                   <td className="py-2 px-4">{data.category}</td>
                   <td className="py-2 px-4 flex items-center space-x-2">
@@ -147,6 +146,8 @@ const Files = ({ data = [
               )}
             </tbody>
           </table>
+          </CardBody>
+          
         </div>
       ) : (
         <Folder activeTab="sharedWithRole" search={searchTerm} />
@@ -156,5 +157,3 @@ const Files = ({ data = [
 };
  
 export default Files;
- 
- 
