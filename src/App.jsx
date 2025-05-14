@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./Components/navbar";
 import ThemeSelector from "./Pages/ThemeSelector";
 import PeopleLayout from "./layout/PeopleLayout";
@@ -9,7 +9,7 @@ import Profile from "./Pages/People/profile";
 import Login from "./Pages/login/Login";
 import ForgotPass from "./Pages/login/ForgotPass";
 import EditProfile from "./Pages/People/EditProfile";
-import ResetPassword from "./Pages/People/login/Resetpassword";
+import ResetPassword from "./Pages/login/Resetpassword";
 import LeaveTracker from "./Pages/People/LeaveTracker";
 import LeaveTrackerAdmin from "./Pages/People/LeaveTrackerAdmin";
 import AuthLayout from "./layout/AuthLayout";
@@ -18,12 +18,13 @@ function App() {
   return (
 <>
       <Routes>
-        <Route path="/theme-selector" element={<ThemeSelector />} />
+        <Route path="/" element={<Navigate to="/auth/login" />} />
         <Route path="/auth" element={<AuthLayout/>}>
           <Route index path="login" element={<Login />} />
           <Route path="forgot-password" element={<ForgotPass/>} />
           <Route path="reset-password" element={<ResetPassword/>} />
         </Route>
+        <Route path="/theme-selector" element={<ThemeSelector />} />
         <Route path="/people/*" element={<PeopleLayout />}>
           <Route index element={<Home />} />
           <Route path="timetracker" element={<TimeTracker />} />

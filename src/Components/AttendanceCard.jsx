@@ -2,7 +2,7 @@ import React from 'react';
 
 const AttendanceCard = ({ title, value, badgeColor, icon }) => {
     return (
-        <div className="relative bg-white rounded-2xl shadow-md px-6 py-6 flex items-center justify-between w-80">
+        <div className="relative bg-white rounded-2xl shadow-md px-6 py-6 flex items-center justify-between w-70">
             {/* Badge */}
             <div className={`absolute -top-4 left-4 ${badgeColor} text-white p-2 rounded-lg`}>
                 {icon}
@@ -18,7 +18,7 @@ const AttendanceCard = ({ title, value, badgeColor, icon }) => {
                 <div className="w-px h-8 bg-gray-300 mx-2"></div>
 
                 <div className="text-center w-1/2">
-                    <p className="text-sm text-gray-800"> Available : <span className="font-semibold">{value}</span> </p>
+                    <p className="text-sm text-gray-800 whitespace-nowrap"> Available : <span className="font-semibold">{value}</span> </p>
                 </div>
             </div>
         </div>

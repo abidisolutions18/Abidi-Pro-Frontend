@@ -29,7 +29,7 @@ const ResetPassword = () => {
       passwordRegex.test(watch("password")) &&
       passwordRegex.test(watch("confirmPassword"))
     ) {
-      navigate("/login");
+      navigate("/auth/login");
     } else {
       toast.error("Please fill in all fields.", {
         position: "top-right",
