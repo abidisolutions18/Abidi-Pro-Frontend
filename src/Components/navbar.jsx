@@ -54,7 +54,7 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className="shadow-lg bg-primary text-text transition-colors duration-300 relative z-50">
+<nav className="fixed top-0 left-0 w-full z-50 shadow-lg bg-primary text-text transition-colors duration-300">
         <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
           <div className="relative flex items-center justify-between py-4">
             {/* Mobile menu button */}

@@ -54,7 +54,7 @@ const PeopleSubNavbar = () => {
   );
 
   return (
-    <Navbar className="sticky top-0 z-10 max-w-full rounded-none px-4 py-2 lg:px-8 lg:py-4 bg-background shadow-none border-none">
+    <Navbar className="fixed top-16 z-10 max-w-full rounded-none px-4 py-2 lg:px-8 lg:py-4 bg-background shadow-none border-none">
       <div className="flex items-center justify-between text-blue-gray-900">
         {/* Check In Button (left) */}
         <Button

@@ -47,3 +47,6 @@ color: var(--color-description);
 .text-completed {
   color: var(--color-completed);
 }
+.bg-completed {
+  background-color: var(--color-completed);
+}

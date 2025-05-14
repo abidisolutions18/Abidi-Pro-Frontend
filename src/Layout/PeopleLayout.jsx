@@ -8,7 +8,7 @@ const PeopleLayout = () => {
     <div>
         <Navbar />
       <PeopleSubNavbar />
-      <div className="">
+      <div className="pt-[8.5rem]">
         <Outlet />
       </div>
     </div>
