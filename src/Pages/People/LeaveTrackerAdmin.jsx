@@ -77,8 +77,8 @@ const LeaveTrackerAdmin = () => {
                         <div>
                             <div className='px-2 text-lg'>Leave Summary</div>
                             <div className=''>
-                                <h1 className='px-2 text-xs font-light mt-2 ml-1'>Available Leaves        :   02</h1>
-                                <h1 className='px-2 text-xs font-light mt-1 ml-1 '>Booked Leaves        :   20</h1>
+                                <h1 className='px-2 text-xs font-light mt-3 ml-1'>Available Leaves        :   02</h1>
+                                <h1 className='px-2 text-xs font-light mt-2 ml-1 '>Booked Leaves        :   20</h1>
                             </div>
                         </div>
                         <button className='bg-[#76FA9E] h-8 px-4 rounded-lg text-xs'>Apply Now</button>
@@ -95,7 +95,7 @@ const LeaveTrackerAdmin = () => {
                         })
                     }
                 </div>
-                <div className='mt-3 bg-background px-6 py-1  rounded-md text-sm font-medium'>
+                {/* <div className='mt-3 bg-background px-6 py-1  rounded-md text-sm font-medium'>
                     <div className='px-2 my-4 text-lg'>Applied Leave</div>
                     <div className='bg-primary py-4 grid grid-cols-[1fr_2fr_2fr_3fr_1fr] rounded-t-lg text-white'>
                         <span className='text-center'>Date</span>
@@ -118,7 +118,7 @@ const LeaveTrackerAdmin = () => {
                         })
                     }
                    
-                </div>
+                </div> */}
             </div>
         </div>
     )

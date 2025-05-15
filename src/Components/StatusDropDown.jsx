@@ -1,0 +1,46 @@
+import React, { useState } from 'react';
+
+const StatusDropDown = ({ status, onChange }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const statuses = ['Approved', 'Pending', 'Rejected']; // Customize as needed
+
+  const toggleDropdown = () => setIsOpen(!isOpen);
+
+  const handleStatusChange = (newStatus) => {
+    onChange(newStatus);
+    setIsOpen(false);
+  };
+
+  const statusColor = {
+    Approved: 'bg-completed ',
+    Pending: 'bg-slate-500 text-white',
+    Rejected: 'bg-red-500 text-white',
+  };
+
+  return (
+    <div className="relative inline-block text-left">
+      <div
+        onClick={toggleDropdown}
+        className={`cursor-pointer px-3 py-1 rounded-sm text-center ${statusColor[status] || 'bg-slate-500 text-white'}`}
+      >
+        {status}
+      </div>
+
+      {isOpen && (
+        <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded shadow-lg">
+          {statuses.map((s) => (
+            <div
+              key={s}
+              onClick={() => handleStatusChange(s)}
+              className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+            >
+              {s}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default StatusDropDown;

@@ -4,15 +4,7 @@ const ApplyLeaveModal = ({isOpen,setIsOpen}) => {
 
   return (
     <>
-      {/* Button to open modal */}
-      <button
-        className="bg-teal-500 text-white px-4 py-2 rounded-md"
-        onClick={() => setIsOpen(true)}
-      >
-        Apply Leave
-      </button>
-
-      {/* Modal Overlay */}
+{/* Modal Overlay */}
       {isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-30 z-[9999] flex justify-end">
           {/* Modal Panel */}

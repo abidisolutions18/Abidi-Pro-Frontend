@@ -65,7 +65,7 @@ const Navbar = () => {
     { name: "Leave Tracker", to: "/leave", icon: TbBeach },
     { name: "Files", to: "/file", icon: FolderIcon },
     { name: "Tickets", to: "/ticket", icon: IoTicketOutline },
-    { name: "Projects", to: "/calendar", icon: CalendarDaysIcon },
+    { name: "Projects", to: "/projects", icon: FolderIcon },
   ];
 
   return (
