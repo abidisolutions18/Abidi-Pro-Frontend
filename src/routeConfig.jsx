@@ -36,12 +36,12 @@ export const moduleConfigs = {
       { name: "Approve Timelogs", path: "/time/approve" },
     ],
   },
-  ticket: {
+  tickets: {
     basePath: "/tickets",
     subNavbarKey: "tickets",
     links: [
-      { name: "Tickets", path: "/tickets" },
-      { name: "Apply for Ticket", path: "/role" },
+      { name: "Raise a Ticket", path: "/tickets/raise" },
+      { name: "Ticket List", path: "/tickets/ticketlist" },
     ],
   },
    project: {

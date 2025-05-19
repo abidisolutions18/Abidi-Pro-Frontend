@@ -22,14 +22,14 @@ import Projects from "./Pages/Projects/Projects";
 import Project from "./Pages/Projects/Project";
 import UserManagement from "./Pages/Admin/UserManagement";
 import LeaveRequest from "./Pages/People/LeaveRequest";
-import Ticket from "./Pages/People/Ticket";
 import ApproveTimelogs from "./Pages/People/ApproveTimelogs";
 import { ToastContainer } from "react-toastify";
 import PrivateRoute from "./Components/PrivateRoute";
 import PublicRoute from "./Components/PublicRoute";
 import "react-toastify/dist/ReactToastify.css";
 import VerifyOtp from "./Pages/login/VerifyOTP";
-
+import Ticket from "./Pages/Tickets/Ticket";
+import AdminTickets from "./Pages/Tickets/AdminTickets";
 function App() {
   return (
     <>
@@ -99,9 +99,9 @@ function App() {
           <Route path="approve" element={<ApproveTimelogs />} />
         </Route>
         <Route path="/tickets/*" element={<AppLayout />}>
-          <Route index element={Ticket} />
-
-          <Route path="leaveTracker" element={<LeaveTracker />} />
+          <Route index element={<Navigate to="raise" replace />} />
+          <Route index path="raise" element={<Ticket />} />
+          <Route path="ticketlist" element={<AdminTickets />} />
           {/* <Route path ="leaveTrackerAdmin" element={<LeaveTrackerAdmin/>}/> */}
         </Route>
         <Route path="/project/*" element={<AppLayout />}>
