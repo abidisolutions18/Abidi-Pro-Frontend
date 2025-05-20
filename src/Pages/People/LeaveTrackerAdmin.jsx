@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
 import AttendanceCard from '../../Components/AttendanceCard'
-import { FaUmbrellaBeach, FaUserFriends, FaHospital, FaTools } from 'react-icons/fa';
+import { FaUmbrellaBeach, FaUserFriends, FaHospital, FaTools, FaPlus } from 'react-icons/fa';
 import { HiOutlineUserRemove } from 'react-icons/hi';
 import HolidayTable from '../../Components/HolidayTable';
 import { DropDownPicker } from '../../Components/DropDownPicker';
 import ApplyLeaveModal from '../../Components/LeaveModal';
 import StatusDropDown from '../../Components/StatusDropDown';
+import AddHolidayModal from '../../Components/AddHolidayModal';
 const LeaveTrackerAdmin = () => {
       const [isAdmin, setIsAdmin] = useState(true);
       const [isOpen, setIsOpen] = useState(false);
@@ -162,6 +163,16 @@ const LeaveTrackerAdmin = () => {
                   }
 
                 </div>
+                 <div className='p-4 mt-3 bg-background px-6 pb-8 rounded-md text-sm font-semibold'>
+<div className="flex justify-between items-center mb-4">         
+  <h1 className=''>Upcoming Holidays And Leaves</h1>
+ <button onClick={()=>setIsOpen(i=>!i)} className="flex items-center gap-2 bg-[#86B2AA] text-white text-sm px-4 py-2 rounded-md hover:brightness-110">
+          <FaPlus /> Add Holiday
+        </button>                </div>
+                <HolidayTable />
+              </div>
+                    <AddHolidayModal isOpen={isOpen} setIsOpen={setIsOpen} />
+
             </div>
         </div>
     )

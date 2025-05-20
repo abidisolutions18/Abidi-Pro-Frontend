@@ -1,9 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 
 const TaskStatusDropDown = ({ status, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
-
   const statuses = ['InProgress', 'Hold', 'UnderReview', 'Completed'];
 
   const toggleDropdown = () => setIsOpen(!isOpen);
@@ -20,19 +18,8 @@ const TaskStatusDropDown = ({ status, onChange }) => {
     UnderReview: 'bg-yellow-500 text-white',
   };
 
-  // Optional: close dropdown if clicked outside
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   return (
-    <div ref={dropdownRef} className="relative w-full h-full text-left z-50">
+    <div className="relative w-full h-full text-left">
       {/* Status Button */}
       <div
         onClick={(e) => {
@@ -46,7 +33,8 @@ const TaskStatusDropDown = ({ status, onChange }) => {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute left-0 top-full mt-1 w-full bg-white border border-gray-300 rounded shadow-lg z-50">
+        
+        <div className="absolute mt-1 w-full bg-white border border-gray-300 rounded shadow-lg z-10  overflow-visible">
           {statuses.map((s) => (
             <div
               key={s}

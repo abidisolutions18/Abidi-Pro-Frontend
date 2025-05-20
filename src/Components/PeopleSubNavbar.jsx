@@ -48,7 +48,7 @@ const SubNavbar = () => {
   if (!links.length) return null;
 
   return (
-    <Navbar className="fixed top-16 z-10 max-w-full rounded-nonemy-2 px-4 my-4 py-2 lg:px-8 lg:py-4 bg-background shadow-none border-none">
+    <Navbar className="fixed top-12 z-10 max-w-full rounded-nonemy-2 px-4 my-4 py-2 lg:px-8 lg:py-4 bg-background shadow-none border-none">
       <div className="flex items-center justify-between text-blue-gray-900">
         {/* Check In/Out Button */}
         <Button
@@ -73,7 +73,7 @@ const SubNavbar = () => {
         {/* Mobile toggle */}
         <IconButton
           variant="text"
-          className="ml-auto h-6 w-6 lg:hidden"
+          className="ml-auto h-6 w-6 lg:hidden text-description"
           onClick={() => setOpenNav(!openNav)}
         >
           {openNav ? (

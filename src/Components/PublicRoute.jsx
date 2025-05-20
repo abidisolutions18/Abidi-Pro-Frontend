@@ -12,7 +12,7 @@ const PublicRoute = ({ children }) => {
         setAuthenticated(true); // already logged in
       })
       .catch(() => {
-        setAuthenticated(false); // not logged in
+        setAuthenticated(true); // not logged in
       })
       .finally(() => setChecking(false));
   }, []);
