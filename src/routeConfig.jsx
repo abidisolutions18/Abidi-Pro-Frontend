@@ -8,6 +8,7 @@ export const moduleConfigs = {
       { name: "Files", path: "/people/files" },
       { name: "Profile", path: "/people/profile" },
       { name: "Leave Tracker", path: "/people/leaveTracker" },
+      {name: "FAQ", path: "/people/FAQs"},
       { name: "Admin", path: "/people/leaveTrackerAdmin" },
     ],
   },

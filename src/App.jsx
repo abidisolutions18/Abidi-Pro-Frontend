@@ -1,11 +1,11 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import 'react-datepicker/dist/react-datepicker.css';
-import './index.css'; // your Tailwind styles
- 
+import "react-datepicker/dist/react-datepicker.css";
+import "./index.css"; // your Tailwind styles
+
 // Layouts
 import AppLayout from "./Layout/AppLayout";
 import AuthLayout from "./layout/AuthLayout";
- 
+
 // Pages
 import ThemeSelector from "./Pages/ThemeSelector";
 import Login from "./Pages/login/Login";
@@ -31,13 +31,17 @@ import PublicRoute from "./Components/PublicRoute";
 import "react-toastify/dist/ReactToastify.css";
 import VerifyOtp from "./Pages/login/VerifyOTP";
 import Ticket from "./Pages/Tickets/Ticket";
-import AdminTickets from "./Pages/Tickets/AdminTickets";import AdminDashBoard from "./Pages/Admin/AdminDashBoard";
+import AdminTickets from "./Pages/Tickets/AdminTickets";
+import AdminDashBoard from "./Pages/Admin/AdminDashBoard";
 import ActivityLogs from "./Pages/Admin/ActivityLogs";
 import MyTask from "./Pages/Projects/MyTask";
 import useAutoLogin from "./Hooks/useAutoLogin";
- 
+import { TimeLogProvider } from "../src/Pages/People/TimeLogContext";
+import Role from "./Pages/People/sharedWithRole";
+import UploadDocument from "./Pages/People/UploadDocument";
+import FAQs from "./Pages/People/FAQ";
+// import RequestHR from "./Pages/People/
 function App() {
-    useAutoLogin();
   return (
     <>
       <ToastContainer
@@ -53,14 +57,12 @@ function App() {
       <Routes>
         {/* Redirect to login by default */}
         <Route path="/" element={<Navigate to="/auth/login" />} />
- 
+
         {/* Auth routes */}
         <Route
           path="/auth"
           element={
-            <PublicRoute>
               <AuthLayout />
-            </PublicRoute>
           }
         >
           <Route index path="login" element={<Login />} />
@@ -68,17 +70,15 @@ function App() {
           <Route path="reset-password" element={<ResetPassword />} />
           <Route path="verify-otp" element={<VerifyOtp />} />
         </Route>
- 
+
         {/* Theme Selector */}
         <Route path="/theme-selector" element={<ThemeSelector />} />
- 
+
         {/* Main App Routes with AppLayout and SubNavbar */}
         <Route
           path="/people/*"
           element={
-            <PrivateRoute>
-              <AppLayout />{" "}
-            </PrivateRoute>
+              <AppLayout />
           }
         >
           <Route index element={<Home />} />
@@ -88,23 +88,28 @@ function App() {
           <Route path="edit-profile" element={<EditProfile />} />
           <Route path="leaveTracker" element={<LeaveTracker />} />
           <Route path="leaveTrackerAdmin" element={<LeaveTrackerAdmin />} />
+          <Route path="faq" element={<FAQs />} />
         </Route>
- 
+
         <Route path="/leave/*" element={<AppLayout />}>
           <Route index element={<Navigate to="/leave/summary" />} />
           <Route index path="summary" element={<LeaveTracker />} />
           <Route path="request" element={<LeaveRequest />} />
           <Route path="leaveTrackerAdmin" element={<LeaveTrackerAdmin />} />
         </Route>
+
         <Route path="/file/*" element={<AppLayout />}>
           <Route index element={<Files />} />
-          <Route path="role" element={<FileTabs />} />
+          <Route path="role" element={<Role />} />
+          <Route path="upload" element={<UploadDocument />} />
         </Route>
+
         <Route path="/time/*" element={<AppLayout />}>
           <Route index element={<Navigate to="history" replace />} />
           <Route index path="history" element={<TimeTracker />} />{" "}
           <Route path="approve" element={<ApproveTimelogs />} />
         </Route>
+
         <Route path="/tickets/*" element={<AppLayout />}>
           <Route index element={<Navigate to="raise" replace />} />
           <Route index path="raise" element={<Ticket />} />
@@ -113,18 +118,24 @@ function App() {
         </Route>
         <Route path="/project/*" element={<AppLayout />}>
           <Route index element={<Navigate to="projectDashboard" replace />} />
- 
+
           <Route index path="projectDashboard" element={<ProjectDashBoard />} />
           <Route path="projects" element={<Projects />} />
           <Route path="projectDetailed" element={<Project />} />
           <Route path="myTask" element={<MyTask />} />
- 
- 
+
           {/* <Route path ="leaveTrackerAdmin" element={<LeaveTrackerAdmin/>}/> */}
         </Route>
-         <Route path="/admin/*" element={<AppLayout />}>
-          <Route index element={<Navigate to="adminDashboard" replace />} />  // ✅ Redirect
-          <Route  index path="adminDashboard"  element={<AdminDashBoard />} />
+
+  <Route path="/faq/*" element={<AppLayout />}>
+            <Route index element={<FAQs/>} />
+             {/* <Route path="requestHR" element={<RequestHR/>} /> */}
+          </Route>
+
+        <Route path="/admin/*" element={<AppLayout />}>
+          <Route index element={<Navigate to="adminDashboard" replace />} /> //
+          ✅ Redirect
+          <Route index path="adminDashboard" element={<AdminDashBoard />} />
           <Route path="userManagement" element={<UserManagement />} />
           <Route path="logs" element={<ActivityLogs />} />
         </Route>
@@ -132,6 +143,5 @@ function App() {
     </>
   );
 }
- 
+
 export default App;
- 

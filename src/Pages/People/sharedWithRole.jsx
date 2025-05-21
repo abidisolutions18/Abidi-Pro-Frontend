@@ -7,8 +7,8 @@ import FolderGrid from "./FolderGrid";
 import UploadModal from "./UploadModal";
 import OpenFolderScreen from "./OpenFolderScreen";
 
-const Files = () => {
-
+const Role = () => {
+ 
   const [viewMode, setViewMode] = useState("table");
   const [searchTerm, setSearchTerm] = useState("");
   const [open, setOpen] = useState(false);
@@ -29,7 +29,7 @@ const Files = () => {
         />
       ) : (
         <>
-          
+
 
           {/* Search and View Controls */}
           <div className="flex flex-col sm:flex-row sm:items-center mb-5 space-y-2 sm:space-y-0 sm:space-x-4 justify-between bg-white rounded-lg px-8 py-4">
@@ -109,4 +109,4 @@ const Files = () => {
   );
 };
 
-export default Files;
+export default Role;

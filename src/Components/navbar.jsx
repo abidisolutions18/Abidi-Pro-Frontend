@@ -16,7 +16,8 @@ import api from "../axios";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
 import { clearUser } from "../Store/userSlice";
- 
+ import { TbUserQuestion } from "react-icons/tb";
+
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -87,6 +88,8 @@ const Navbar = () => {
     { name: "Files", to: "/file", icon: FolderIcon },
     { name: "Tickets", to: "/tickets", icon: IoTicketOutline },
     { name: "Projects", to: "/project", icon: GrProjects },
+   { name: "FAQ", to:"/faq", icon:TbUserQuestion},
+
     { name: "Admin ", to: "/admin", icon: UsersIcon },
   ];
  
