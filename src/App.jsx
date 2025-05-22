@@ -81,14 +81,11 @@ function App() {
               <AppLayout />
           }
         >
-          <Route index element={<Home />} />
-          <Route path="timetracker" element={<TimeTracker />} />
-          <Route path="files" element={<Files />} />
+           <Route index element={<Navigate to="/people/home" />} />
+          <Route index path="home" element={<Home />} />
           <Route path="profile" element={<Profile />} />
           <Route path="edit-profile" element={<EditProfile />} />
-          <Route path="leaveTracker" element={<LeaveTracker />} />
-          <Route path="leaveTrackerAdmin" element={<LeaveTrackerAdmin />} />
-          <Route path="faq" element={<FAQs />} />
+          <Route path="FAQs" element={<FAQs />} />
         </Route>
 
         <Route path="/leave/*" element={<AppLayout />}>

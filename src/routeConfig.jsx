@@ -3,7 +3,7 @@ export const moduleConfigs = {
     basePath: "/people",
     subNavbarKey: "people",
     links: [
-      { name: "Home", path: "/people" },
+      { name: "Home", path: "/people/home" },
       { name: "Profile", path: "/people/profile" },
       {name: "FAQ", path: "/people/FAQs"},
     ],
