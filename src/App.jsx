@@ -45,6 +45,8 @@ import SessionMonitor from "./Components/sessionMonitor";
 import useTokenRefresh from "./Hooks/useTokenRefresh";
  
 function App() {
+  useAutoLogin();
+  useTokenRefresh();
   return (
     <>
       <SessionMonitor />
