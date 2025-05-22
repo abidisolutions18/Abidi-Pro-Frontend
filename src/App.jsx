@@ -82,13 +82,9 @@ function App() {
           }
         >
           <Route index element={<Home />} />
-          <Route path="timetracker" element={<TimeTracker />} />
-          <Route path="files" element={<Files />} />
           <Route path="profile" element={<Profile />} />
           <Route path="edit-profile" element={<EditProfile />} />
-          <Route path="leaveTracker" element={<LeaveTracker />} />
-          <Route path="leaveTrackerAdmin" element={<LeaveTrackerAdmin />} />
-          <Route path="faq" element={<FAQs />} />
+          <Route path="FAQs" element={<FAQs />} />
         </Route>
 
         <Route path="/leave/*" element={<AppLayout />}>

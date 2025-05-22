@@ -24,7 +24,7 @@ const CalendarNavigator = () => {
   };
 
   return (
-    <div className="relative flex items-center gap-1 group">
+    <div className="flex items-center gap-1 group">
       {/* Navigation & Calendar */}
       <div className="flex items-center bg-white rounded-md shadow  py-1 relative md:py-2 md:px-2">
         <button onClick={handlePrev} className="p-1 hover:bg-gray-100 rounded">

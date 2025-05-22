@@ -1,10 +1,15 @@
 import React, { useEffect, useState } from "react";
 import api from "../../axios";
 import StatusDropDown from "../../Components/StatusDropDown";
+import { FaPlus } from "react-icons/fa";
+import HolidayTable from "../../Components/HolidayTable";
+import AddHolidayModal from "../../Components/AddHolidayModal";
  
 const LeaveTrackerAdmin = () => {
   const [departmentLeaveRecord, setDepartmentLeaveRecord] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(true);
+
  
   const fetchLeaves = async () => {
     try {
