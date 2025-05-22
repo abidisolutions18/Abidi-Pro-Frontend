@@ -52,10 +52,11 @@ const Files = () => {
               </div>
 
               {/* View mode controls */}
-              <div className="flex items-center space-x-2">
+              {/* Hide this entire block on small screens */}
+              <div className="hidden sm:flex items-center space-x-2">
                 <button
                   onClick={() => setViewMode("table")}
-                  className={`p-2 rounded ${
+                  className={`p-2 rounded flex items-center space-x-1 ${
                     viewMode === "table"
                       ? "bg-[#99c7be] text-white"
                       : "bg-primary text-white"
@@ -66,7 +67,7 @@ const Files = () => {
                 </button>
                 <button
                   onClick={() => setViewMode("grid")}
-                  className={`p-2 rounded ${
+                  className={`p-2 rounded flex items-center space-x-1 ${
                     viewMode === "grid"
                       ? "bg-[#99c7be] text-white"
                       : "bg-primary text-white"
@@ -76,7 +77,7 @@ const Files = () => {
                   <FaRegFolder />
                 </button>
                 <button
-                  className="p-2 rounded bg-primary text-white"
+                  className="p-2 rounded bg-primary text-white flex items-center space-x-1"
                   title="Filter"
                 >
                   <IoFilterSharp />

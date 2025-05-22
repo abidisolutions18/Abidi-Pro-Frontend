@@ -9,7 +9,10 @@ const cardOptions = [
   { id: "notes", label: "Notes"},
   { id: "recent activities", label: "Recent activities"},
   { id: "birthdays", label: "Upcoming Birthdays"},
-  { id: "leavelog", label: "Leave Logs"}
+  { id: "leavelog", label: "Leave Logs"},
+  { id: "upcomingDeadlines", label: "Deadlines"},
+  { id: "timeoffBalance", label: "Time Off Balance"},
+  { id: "tasksAssignedToMe", label: "My Tasks"},
 ];
 
 const AddCardMenu = ({ onAdd }) => {

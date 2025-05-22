@@ -16,6 +16,9 @@ const OpenFolderScreen = ({ folder, onClose }) => {
     f.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const capitalize = (str) =>
+  str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
+
   return (
     <div className="min-h-screen bg-primary p-2 sm:p-4 mx-2 my-4 sm:m-6 rounded-lg shadow-md">
       {/* Back button and folder title */}
@@ -24,10 +27,10 @@ const OpenFolderScreen = ({ folder, onClose }) => {
           onClick={onClose}
           className="flex items-center text-sm text-gray-600 hover:text-gray-800"
         >
-          <FiArrowLeft className="mr-1" /> Back to folders
+          <FiArrowLeft className="mr-1" />
         </button>
-        <h2 className="text-lg font-medium text-gray-800">
-          {folder?.name || "Folder"}
+        <h2 className="text-lg font-medium text-white">
+          {folder?.name ? capitalize(folder.name) : "Folder"}
         </h2>
       </div>
 

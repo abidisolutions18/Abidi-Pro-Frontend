@@ -29,58 +29,72 @@ const Role = () => {
       ) : (
         <>
           {/* Search and View Controls */}
-          <div className="flex flex-col sm:flex-row sm:items-center mb-5 space-y-2 sm:space-y-0 sm:space-x-4 justify-between bg-white rounded-lg px-8 py-4">
-            <div className="flex items-center space-x-4">
-              <label className="text-sm text-heading">Show</label>
-              <select className="text-sm px-2 py-1 text-heading bg-secondary rounded-md shadow-md">
-                <option className="text-gray-700">10</option>
-                <option className="text-gray-700">25</option>
-                <option className="text-gray-700">50</option>
-              </select>
-              <span className="text-sm text-heading">entries</span>
-              <input
-                type="text"
-                placeholder="Search..."
-                className="border-0 px-3 py-1.5 rounded-md shadow-md w-full sm:w-64 text-sm bg-secondary text-description"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
 
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setViewMode("table")}
-                className={` p-2 rounded ${
-                  viewMode === "table"
-                    ? " bg-[#99c7be] text-white"
-                    : "bg-primary text-white"
-                }`}
-                title="Table view"
-              >
-                <IoListOutline />
-              </button>
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`p-2 rounded ${
-                  viewMode === "grid"
-                    ? " bg-[#99c7be] text-white"
-                    : " bg-primary text-white"
-                }`}
-                title="Grid view"
-              >
-                <FaRegFolder />
-              </button>
-              <button
-                className="p-2 rounded bg-primary text-white"
-                title="Filter"
-              >
-                <IoFilterSharp />
-              </button>
+          <div className="flex flex-col space-y-4 mb-5 bg-white rounded-lg px-4 py-4 sm:px-8">
+            {/* Top controls section - responsive layout */}
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between w-full">
+              {/* Entries dropdown and search - stacks on mobile, inline on desktop */}
+              <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 mb-3 lg:mb-0">
+                <div className="flex items-center space-x-2 sm:space-x-4">
+                  <label className="text-sm text-heading whitespace-nowrap">
+                    Show
+                  </label>
+                  <select className="text-sm px-2 py-1 text-heading bg-secondary rounded-md shadow-md">
+                    <option className="text-gray-700">10</option>
+                    <option className="text-gray-700">25</option>
+                    <option className="text-gray-700">50</option>
+                  </select>
+                  <span className="text-sm text-heading">entries</span>
+                </div>
+
+                <div className="w-full sm:w-auto">
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    className="border-0 px-3 py-1.5 rounded-md shadow-md w-full sm:w-64 text-sm bg-secondary text-description"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* View mode controls */}
+              {/* Hide this entire block on small screens */}
+              <div className="hidden sm:flex items-center space-x-2">
+                <button
+                  onClick={() => setViewMode("table")}
+                  className={`p-2 rounded flex items-center space-x-1 ${
+                    viewMode === "table"
+                      ? "bg-[#99c7be] text-white"
+                      : "bg-primary text-white"
+                  }`}
+                  title="Table view"
+                >
+                  <IoListOutline />
+                </button>
+                <button
+                  onClick={() => setViewMode("grid")}
+                  className={`p-2 rounded flex items-center space-x-1 ${
+                    viewMode === "grid"
+                      ? "bg-[#99c7be] text-white"
+                      : "bg-primary text-white"
+                  }`}
+                  title="Grid view"
+                >
+                  <FaRegFolder />
+                </button>
+                <button
+                  className="p-2 rounded bg-primary text-white flex items-center space-x-1"
+                  title="Filter"
+                >
+                  <IoFilterSharp />
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Main Content */}
-          <div className="mb-4">
+          <div className="mb-4 overflow-x-auto">
             {viewMode === "grid" ? (
               <>
                 <FolderGrid

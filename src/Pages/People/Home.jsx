@@ -9,7 +9,12 @@ import AddCardMenu from "../../Components/home/AddCardMenu";
 import RecentActivitiesCard from "../../Components/home/RecentActivitiesCard";
 import UpcomingBirthdaysCard from "../../Components/home/UpcomingBirthdaysCard";
 import LeaveLogCard from "../../Components/home/LeaveLogCard";
+import UpcomingDeadlinesCard from "../../Components/home/UpcomingDeadlinesCard";
+import TimeoffBalanceCard from "../../Components/home/TimeoffBalanceCard";
+import TasksAssignedToMeCard from "../../Components/home/TasksAssignedToMeCard";
 import { useTimeLog } from "./TimeLogContext";
+
+
 
 function format(sec) {
   const h = String(Math.floor(sec / 3600)).padStart(2, "0");
@@ -58,6 +63,9 @@ const Home = () => {
       case "recent activities": return <RecentActivitiesCard {...props}/>;
       case "birthdays": return <UpcomingBirthdaysCard {...props}/>;
       case "leavelog": return <LeaveLogCard {...props} />;
+      case "upcomingDeadlines": return <UpcomingDeadlinesCard/>;
+      case "timeoffBalance": return <TimeoffBalanceCard/>;
+      case "tasksAssignedToMe": return <TasksAssignedToMeCard/>;
       default: return null;
     }
   };
