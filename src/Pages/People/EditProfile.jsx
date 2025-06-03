@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { IoArrowBack } from "react-icons/io5";
 import api from "../../axios";
 import {toast} from "react-toastify";
+import { Spin } from "antd";
  
 export default function EditProfile() {
   const navigate = useNavigate();
@@ -18,9 +19,8 @@ export default function EditProfile() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await api.get("/auth/check-session", {
+        const res = await api.get("/auth/me", {
           withCredentials: true,
-          _silentRefresh: true,
         });
  
         const user = res.data.user;
@@ -82,7 +82,9 @@ export default function EditProfile() {
     setExperienceList(experienceList.filter((_, i) => i !== index));
  
   if (loading) {
-    return <div className="text-white text-center mt-10">Loading...</div>;
+    return       <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-70 z-50">
+        <Spin size="large" tip="Loading profile..." />
+      </div>
   }
  
   return (

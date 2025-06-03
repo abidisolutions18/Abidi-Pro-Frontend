@@ -41,7 +41,6 @@ import Role from "./Pages/People/sharedWithRole";
 import UploadDocument from "./Pages/People/UploadDocument";
 import FAQs from "./Pages/People/FAQ";
 // import RequestHR from "./Pages/People/
-import SessionMonitor from "./Components/sessionMonitor";
 import useTokenRefresh from "./Hooks/useTokenRefresh";
 import AssignTicket from "./Pages/Tickets/AssignTickets";
 
@@ -50,16 +49,16 @@ function App() {
   useTokenRefresh();
   return (
     <>
-      <SessionMonitor />
       <ToastContainer
         position="top-right"
         autoClose={2000}
         hideProgressBar={false}
-        newestOnTop={false}
+        newestOnTop
         closeOnClick
         pauseOnHover
         draggable
         theme="light"
+        limit={1}
       />
       <Routes>
         {/* Redirect to login by default */}

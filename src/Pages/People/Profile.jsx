@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../../axios"; 
+import { Spin } from "antd";
  
 export default function Profile() {
   const navigate = useNavigate();
@@ -18,9 +19,8 @@ export default function Profile() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await api.get("/auth/check-session", {
+        const res = await api.get("/auth/me", {
           withCredentials: true,
-          _silentRefresh: true,
         });
         console.log("User data:", res.data.user);
         setUser(res.data.user);
@@ -36,7 +36,9 @@ export default function Profile() {
  
   if (loading) {
     return (
-      <div className="text-white text-center mt-10">Loading profile...</div>
+      <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-70 z-50">
+        <Spin size="large" tip="Loading profile..." />
+      </div>
     );
   }
  

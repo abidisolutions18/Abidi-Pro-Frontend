@@ -56,6 +56,19 @@ const AdminTickets = () => {
     ticket.subject?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handlePriorityChange = async (ticketId, newPriority) => {
+    try {
+      await api.patch(`/tickets/${ticketId}/priority`, { priority: newPriority });
+      setTickets((prev) =>
+        prev.map((ticket) =>
+          ticket._id === ticketId ? { ...ticket, priority: newPriority } : ticket
+        )
+      );
+    } catch (err) {
+      console.error("Failed to update priority:", err);
+    }
+  };
+
   return (
     <div className="bg-primary p-6 min-h-screen rounded-2xl m-4">
       <div className="p-6 overflow-auto">
@@ -166,7 +179,8 @@ const AdminTickets = () => {
                           <div className="font-medium text-gray-800">{ticket.subject}</div>
                           <div className="flex items-center gap-2 mt-1 text-xs text-gray-600">
                             <span className="text-gray-500">#{ticket.ticketID || ticket._id.slice(0, 6)}</span>
-                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${ticket.status === "Opened"
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium 
+                                ${ticket.status === "opened"
                                 ? "bg-green-100 text-green-700"
                                 : ticket.status === "in progress"
                                   ? "bg-yellow-100 text-yellow-700"
@@ -174,6 +188,17 @@ const AdminTickets = () => {
                               }`}>
                               {ticket.status}
                             </span>
+
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ml-2 
+                                ${ticket.priority === "High Priority"
+                                ? "bg-red-100 text-red-700"
+                                : ticket.priority === "Medium Priority"
+                                  ? "bg-yellow-100 text-yellow-700"
+                                  : "bg-blue-100 text-blue-700"
+                              }`}>
+                              {ticket.priority}
+                            </span>
+
                             <span className="flex items-center gap-1 text-gray-500">
                               <Clock className="w-4 h-4" />
                               {new Date(ticket.createdAt).toLocaleDateString()}
@@ -184,14 +209,16 @@ const AdminTickets = () => {
                         {/* Assignee */}
                         <td className="p-3 text-center">
                           <div className="flex justify-center items-center gap-2">
-                            <FaUserCircle className="text-gray-600 w-6 h-6" />
-                            <span>{ticket.closedBy?.name || "—"}</span>
+                            {ticket.assignedTo ? <><FaUserCircle className="text-gray-600 w-6 h-6" />
+                              <span>{ticket.assignedTo?.name || "Not assigned yet"}</span></> : <span className="text-gray-500">Unassigned</span>}
+
                           </div>
                         </td>
 
                         {/* Actions */}
                         <td className="p-3 text-right">
                           <div className="flex justify-end items-center gap-3">
+                            {/* Status Dropdown */}
                             <select
                               className="border rounded px-2 py-1 text-xs text-gray-700"
                               value={ticket.status}
@@ -201,6 +228,20 @@ const AdminTickets = () => {
                               <option value="in progress">In Progress</option>
                               <option value="closed">Closed</option>
                             </select>
+
+                            {/* Priority Dropdown */}
+                            <select
+                              className="border rounded px-2 py-1 text-xs text-gray-700"
+                              value={ticket.priority || "Medium Priority"}
+                              onChange={(e) => handlePriorityChange(ticket._id, e.target.value)}
+
+                            >
+                              <option value="High Priority">High Priority</option>
+                              <option value="Medium Priority">Medium Priority</option>
+                              <option value="Low Priority">Low Priority</option>
+                            </select>
+
+                            {/* Assign Button */}
                             <button
                               onClick={() => navigate(`/admin/assign-ticket/${ticket._id}`, { state: { ticket } })}
                               className="border border-gray-300 px-3 py-1 rounded text-sm hover:bg-gray-100"
@@ -209,6 +250,7 @@ const AdminTickets = () => {
                             </button>
                           </div>
                         </td>
+
                       </tr>
                     ))
                   ) : (

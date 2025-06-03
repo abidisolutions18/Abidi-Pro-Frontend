@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import api from "../../axios";
-import {toast } from "react-toastify";
+import { toast } from "react-toastify";
 
 const RaiseTicketModal = ({ onClose, onSubmit }) => {
   const [form, setForm] = useState({
-    ticketID: "",
     subject: "",
     description: "",
     attachment: null,
@@ -28,12 +27,11 @@ const RaiseTicketModal = ({ onClose, onSubmit }) => {
 
     try {
       const ticketData = new FormData();
-      ticketData.append("ticketID", form.ticketID);
-      ticketData.append("emailAddress", user.email); // ⬅️ match schema
+      ticketData.append("emailAddress", user.email); // backend expects this
       ticketData.append("subject", form.subject);
       ticketData.append("description", form.description);
       if (form.attachment) {
-        ticketData.append("attachment", form.attachment); // will be converted in backend to attachments array
+        ticketData.append("attachment", form.attachment);
       }
 
       const response = await api.post("/tickets", ticketData, {
@@ -67,17 +65,6 @@ const RaiseTicketModal = ({ onClose, onSubmit }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <label>
-            <span className="block font-medium">Ticket ID:</span>
-            <input
-              name="ticketID"
-              className="w-full border p-2 rounded"
-              value={form.ticketID}
-              onChange={handleChange}
-              required
-            />
-          </label>
-
           <label>
             <span className="block font-medium">Subject:</span>
             <input

@@ -6,7 +6,7 @@ import api from "../../axios";
 import { toast } from "react-toastify";
 import {
   ArrowLeft, Trash2, ChevronDown, Flag, User,
-  Calendar, Clock, Paperclip,
+  Calendar, Clock, Paperclip, Check,
 } from "lucide-react";
 
 const AssignTicket = () => {
@@ -28,8 +28,7 @@ const AssignTicket = () => {
         const res = await api.get(`/tickets/${ticketId}`);
         setTicket(res.data);
         setSelectedAssigneeId(res.data.assignedTo?._id || null);
-      } catch
-      (error) {
+      } catch (error) {
         toast.error(error.response?.data?.message || "Failed to fetch ticket");
       }
     };
@@ -54,23 +53,11 @@ const AssignTicket = () => {
       const res = await api.patch(`/tickets/${ticketId}/assign`, { assignedTo: userId });
       setTicket(res.data);
       setSelectedAssigneeId(userId);
-      toast.success("Ticket assigned");
+      toast.success("Ticket assigned successfully");
     } catch (error) {
       toast.error(`Failed to assign ticket`);
     } finally {
       setAssignDropdownOpen(false);
-    }
-  };
-
-  const handlePriorityChange = async (priority) => {
-    try {
-      const res = await api.patch(`/tickets/${ticketId}/priority`, { priority });
-      setTicket(res.data);
-      toast.success("Priority updated");
-    } catch (error) {
-      toast.error(error.response?.data?.message || `Failed to update priority`);
-    } finally {
-      setStatusDropdownOpen(false);
     }
   };
 
@@ -111,79 +98,78 @@ const AssignTicket = () => {
         <div className="bg-background rounded-lg shadow-md overflow-hidden">
           <div className="p-4 border-b">
             <div className="flex flex-col md:flex-row md:items-center gap-2">
-              <button onClick={() => navigate("/admin/admintickets")} className="text-gray-600 hover:text-gray-900">
+              <button 
+                onClick={() => navigate("/admin/admintickets")} 
+                className="text-gray-600 hover:text-gray-900"
+              >
                 <ArrowLeft size={20} />
               </button>
 
               <div className="flex-1">
                 <h2 className="text-lg font-semibold flex items-center gap-2 text-text">
                   #{ticket.ticketID || ticket._id}: {ticket.subject || ticket.title}
-                  <div className="relative">
-                    <button
-                      onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
-                      className="text-xs px-2 py-1 rounded flex items-center gap-1 bg-gray-200"
-                    >
-                      {ticket.priority}
-                      <ChevronDown size={14} />
-                    </button>
-                    {statusDropdownOpen && (
-                      <div className="absolute right-0 mt-1 w-36 bg-white border rounded shadow z-10">
-                        {["High Priority", "Medium Priority", "Low Priority"].map((level) => (
-                          <button
-                            key={level}
-                            onClick={() => handlePriorityChange(level)}
-                            className="block px-4 py-2 text-sm hover:bg-gray-100"
-                          >
-                            {level}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
                 </h2>
                 <div className="text-sm text-muted flex gap-2 flex-wrap">
-                  <span className="flex items-center"><Clock size={14} className="mr-1" /> Created {new Date(ticket.createdAt).toLocaleString()}</span>
-                  <span className="flex items-center"><Clock size={14} className="mr-1" /> Updated {new Date(ticket.updatedAt).toLocaleString()}</span>
+                  <span className="flex items-center">
+                    <Clock size={14} className="mr-1" /> 
+                    Created {new Date(ticket.createdAt).toLocaleString()}
+                  </span>
+                  <span className="flex items-center">
+                    <Clock size={14} className="mr-1" /> 
+                    Updated {new Date(ticket.updatedAt).toLocaleString()}
+                  </span>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <button onClick={handleDeleteTicket} className="text-red-500 hover:text-red-700">
+                <button 
+                  onClick={handleDeleteTicket} 
+                  className="text-red-500 hover:text-red-700"
+                >
                   <Trash2 size={20} />
                 </button>
 
                 <div className="relative">
                   <button
                     onClick={() => setAssignDropdownOpen(!assignDropdownOpen)}
-                    className={`px-3 py-2 shadow-md rounded flex items-center gap-2 ${selectedAssignee ? "bg-green-500 text-white" : "bg-primary text-text"}`}
+                    className={`px-3 py-2 rounded-md flex items-center gap-2 transition-all ${
+                      selectedAssignee 
+                        ? "bg-green-100 text-green-800 border border-green-200" 
+                        : "bg-gray-100 text-gray-800 border border-gray-200"
+                    } hover:bg-gray-200`}
                   >
-                    {selectedAssignee ? `Assigned to: ${selectedAssignee.name}` : "Assign"}
-                    <ChevronDown size={16} />
+                    <User size={16} />
+                    {selectedAssignee ? selectedAssignee.name : "Assign"}
+                    <ChevronDown 
+                      size={16} 
+                      className={`transition-transform ${
+                        assignDropdownOpen ? "rotate-180" : ""
+                      }`}
+                    />
                   </button>
 
                   {assignDropdownOpen && (
-                    <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-10 border">
-                      <form className="py-2 px-2 space-y-1">
+                    <div className="absolute right-0 mt-1 w-56 bg-white rounded-md shadow-lg z-10 border border-gray-200 overflow-hidden">
+                      <div className="py-1">
+                        <div className="px-3 py-2 text-xs text-gray-500 border-b">
+                          Assign to admin
+                        </div>
                         {adminUsers.map((user) => (
-                          <label key={user._id} className="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={selectedAssigneeId === user._id}
-                              onChange={() => setSelectedAssigneeId(user._id)}
-                              onClick={() => assignToUser(user._id)}
-                            />
-                            <span className="text-sm">{user.name}</span>
-                          </label>
-                        ))}
-                        <button
-                          onClick={() => setAssignDropdownOpen(!assignDropdownOpen)}
-                          className={`px-3 py-2 shadow-md rounded flex items-center gap-2 ${selectedAssignee ? "bg-green-500 text-white" : "bg-primary text-text"
+                          <button
+                            key={user._id}
+                            onClick={() => assignToUser(user._id)}
+                            className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:bg-gray-50 ${
+                              selectedAssigneeId === user._id ? "bg-blue-50 text-blue-600" : ""
                             }`}
-                        >
-                          {selectedAssignee ? `Assigned to: ${selectedAssignee.name}` : "Assign"}
-                          <ChevronDown size={16} />
-                        </button>
-                      </form>
+                          >
+                            {selectedAssigneeId === user._id && (
+                              <Check size={16} className="text-blue-500" />
+                            )}
+                            <span>{user.name}</span>
+                            <span className="text-xs text-gray-400 ml-auto">{user.role}</span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -191,6 +177,7 @@ const AssignTicket = () => {
             </div>
           </div>
 
+          {/* Rest of your component remains the same */}
           {/* Main Content */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Left Side */}

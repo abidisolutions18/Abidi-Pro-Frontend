@@ -1,16 +1,21 @@
+// PublicRoute.jsx - Improved version
 import { useSelector } from "react-redux";
-import { Navigate } from "react-router-dom";
-import useAutoLogin from "../Hooks/useAutoLogin";
+import { Navigate, useLocation } from "react-router-dom";
+import { Spin } from "antd";
 
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading } = useSelector((state) => state.auth);
-  useAutoLogin(); 
+  const location = useLocation();
 
   if (loading) {
-    return <div className="text-white text-center mt-10">Checking session...</div>;
+    return       <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-70 z-50">
+        <Spin size="large" tip="Checking session..." />
+      </div>;
   }
 
-  return isAuthenticated ? <Navigate to="/people" /> : children;
+  return isAuthenticated ? 
+    <Navigate to={location.state?.from || "/people/home"} replace /> 
+    : children;
 };
 
 export default PublicRoute;

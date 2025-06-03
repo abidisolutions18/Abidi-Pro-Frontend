@@ -81,15 +81,19 @@ const VerifyOtp = () => {
       if (verifyOtp.fulfilled.match(resultAction)) {
         toast.success("OTP verified successfully!");
         setTimeout(() => navigate("/people"), 300);
-      } else if (verifyOtp.rejected.match(resultAction)) {
-        setErrorMsg(resultAction.payload?.message || "OTP verification failed");
+      } else {
+        const errorMessage = resultAction.payload?.message || "Invalid OTP. Please try again.";
+        setErrorMsg(errorMessage);
+        toast.error(errorMessage);
       }
-    } catch {
-      setErrorMsg("Verification failed. Please try again.");
+    } catch (error) {
+      const errorMessage = "Verification failed. Please try again.";
+      setErrorMsg(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
-  };
+  };;
 
   return (
     <div
@@ -101,6 +105,7 @@ const VerifyOtp = () => {
       <form
         onSubmit={handleSubmit}
         className="my-4 w-full sm:min-w-[400px] max-w-md bg-white bg-opacity-10 backdrop-blur-md p-6 sm:p-4 rounded-xl shadow-md"
+        disabled={isSubmitting}
       >
         <div className="flex justify-center mb-4">
           <img
