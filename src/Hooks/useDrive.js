@@ -8,9 +8,10 @@ export function useFolderContents(folder) {
   const [files, setFiles]     = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState(null)
-  const folderId = folder||'root'
+  const folderId = folder || 'root'
   const reload = useCallback(async () => {
-    setLoading(true); setError(null)
+    setLoading(true);
+    setError(null)
     try {
       console.log(folderId,"hello")
       const { data } = await api.get(`/files/folders/${folderId || 'root'}/contents`)
@@ -39,6 +40,7 @@ export function useFileDownloader() {
     setLoading(true); setError(null)
     try {
       const { data: { downloadUrl } } = await api.get(`/files/files/${fileId}/download`)
+      console.log(downloadUrl,"oooooooooooo")
       window.open(downloadUrl, '_blank')
     } catch (e) {
       setError(e)
@@ -58,7 +60,7 @@ export function useFileUploader() {
 
 
   const upload = useCallback(async ({ file, folderId, folderPath }) => {
-    console.log(folderId)
+    // console.log(folderId)
     console.log(folderId,folderPath+"uploading files")
     setLoading(true); setError(null)
     try {

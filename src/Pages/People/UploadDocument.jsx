@@ -11,6 +11,7 @@ import {
   useFolderCreator,
   useFileDeleter,
   useFolderDeleter,
+  useFileDownloader,
 } from "../../Hooks/useDrive"
 import { toast } from "react-toastify"
 import { IoEllipsisVertical } from "react-icons/io5"
@@ -27,7 +28,6 @@ const UploadDocument = () => {
 
   const data = useSelector((state) => state)
   const { user } = data?.auth
-
   const currentFolder = folderStack[folderStack.length - 1] || { id: "root", name: "Root" }
   const folderId = currentFolder._id
   const folderPath = `users/${user.id}/${folderStack.map((f) => f.id).join("/") || "root"}`
@@ -37,7 +37,7 @@ const UploadDocument = () => {
   const { upload, loading: uploading, error: uploadErr } = useFileUploader()
   const { softDelete: deleteFile, loading: fileDeleteLoading, error: fileDeleteError } = useFileDeleter()
   const { softDelete: deleteFolder, loading: folderDeleteLoading, error: folderDeleteError } = useFolderDeleter()
-
+  const { download, loading:downloadLoading, error:downloadError } = useFileDownloader()
   const toggleDrawer = (open) => () => setDrawerOpen(open)
 
   const handleNewFolder = async () => {
@@ -55,7 +55,42 @@ const UploadDocument = () => {
       toast.error("Failed to create folder")
     }
   }
+async function downloadFile(url, filename = 'file.docx') {
+  try {
+    const response = await fetch(url, {
+      mode: 'cors' // Cloudinary supports CORS on raw files
+    });
+    
+    if (!response.ok) throw new Error('Failed to download file');
 
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    window.URL.revokeObjectURL(blobUrl);
+  } catch (error) {
+    console.error('Error downloading file:', error);
+  }
+}
+
+
+ const handleFileDownload = async (fileId) => {
+    console.log("downloading file", fileId)
+    const file=files.filter(item=> item._id===fileId)
+    try {
+      // await download(fileId)
+        downloadFile(file[0].url,file[0].name)
+      // reload()
+    } catch (err) {
+      toast.error("File upload failed")
+    }
+  }
   const handleFileChange = async (e) => {
     console.log("uploading file", e.target.files[0])
     const file = e.target.files[0]
@@ -203,7 +238,7 @@ const UploadDocument = () => {
 
         {uploadErr && <Alert message={uploadErr.message} type="error" />}
 
-        <Spin spinning={loading || uploading || creating || fileDeleteLoading || folderDeleteLoading}>
+        <Spin spinning={loading || uploading || creating || fileDeleteLoading || folderDeleteLoading || downloadLoading}>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {/* Folders */}
             {folders.map((folder) => (
@@ -248,6 +283,7 @@ const UploadDocument = () => {
             horizontal: "right",
           }}
         >
+        
           <MenuItem
             onClick={() => {
               console.log("Update folder:", selectedFolderId)
@@ -282,6 +318,16 @@ const UploadDocument = () => {
             horizontal: "right",
           }}
         >
+           <MenuItem
+            onClick={() => {
+              console.log("Update file:", selectedFileId)
+              handleCloseFileMenu()
+              handleFileDownload(selectedFileId)
+              // TODO: Trigger update modal or logic here
+            }}
+          >
+            Download
+          </MenuItem>
           <MenuItem
             onClick={() => {
               console.log("Update file:", selectedFileId)

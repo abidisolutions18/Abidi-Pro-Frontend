@@ -7,12 +7,14 @@ import { useTimeLog } from "../Pages/People/TimeLogContext";
 import CircularProgress from '@mui/material/CircularProgress';
 import { toast } from "react-toastify";
 import { setError } from "../api/attendanceTimer";
+import { useDispatch } from "react-redux";
 
 const SubNavbar = () => {
   const [openNav, setOpenNav] = useState(false);
   const { start, checkIn, checkOut, loading, error } = useTimeLog();
   const checkedIn = Boolean(start);
   const { pathname } = useLocation();
+  const dispatch = useDispatch()
   const moduleKey = pathname.split("/")[1];
   // console.log(moduleConfigs)
   const config = moduleConfigs[moduleKey];
