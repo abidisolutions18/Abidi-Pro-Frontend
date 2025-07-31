@@ -5,18 +5,23 @@ export const moduleConfigs = {
     links: [
       { name: "Home", path: "/people/home" },
       { name: "Profile", path: "/people/profile" },
-      {name: "FAQ", path: "/people/FAQs"},
+      { name: "Leave Tracker", path: "/people/summary" }, //from leave  { name: "Leave Summary", path: "/leave/summary" },
+         { name: "Files", path: "/people/shared" }, //from file    { name: "Shared with me", path: "/file/shared" },
+  { name: "Time Tracker", path: "/people/history" }, // from time   { name: "Time Tracker", path: "/time/history" },
+    { name: "Ticket", path: "/people/raise" },   // from tickets    { name: "Raise a Ticket", path: "/tickets/raise" },
+  
+  // {name: "FAQ", path: "/people/FAQs"},
     ],
   },
-  leave: {
-    basePath: "/leave",
-    subNavbarKey: "leave",
-    links: [
-      { name: "Leave Summary", path: "/leave/summary" },
-      { name: "Leave Request", path: "/leave/request" },
-      { name: "Leave Management", path: "/leave/leaveTrackerAdmin" },
-    ],
-  },
+  // leave: {
+  //   basePath: "/leave",
+  //   subNavbarKey: "leave",
+  //   links: [
+  //     { name: "Leave Summary", path: "/leave/summary" },
+  //     { name: "Leave Request", path: "/leave/request" },
+  //     { name: "Leave Management", path: "/leave/leaveTrackerAdmin" },
+  //   ],
+  // },
   file: {
     basePath: "/file",
     subNavbarKey: "file",

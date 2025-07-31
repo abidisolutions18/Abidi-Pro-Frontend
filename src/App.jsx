@@ -95,7 +95,12 @@ function App() {
           <Route
             path='home' element={<Home />} />
           <Route path="timetracker" element={<TimeTracker />} />
+          <Route index path="summary" element={<LeaveTracker />} />
+          <Route index path="shared" element={<Files />} />
           <Route path="files" element={<Files />} />
+                    <Route index path="raise" element={<Ticket />} />
+
+          <Route index path="history" element={<TimeTracker />} />
           <Route path="profile" element={<Profile />} />
           <Route path="edit-profile" element={<EditProfile />} />
           <Route path="FAQs" element={<FAQs />} />
