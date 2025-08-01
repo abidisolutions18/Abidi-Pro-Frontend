@@ -30,7 +30,7 @@ export default function Files() {
   const tabs = [
     { title: "My Files" },
     { title: "Shared Files" },
-    { title: "Upload Documents" }
+    // { title: "Upload Documents" }
   ];
 
   if (error) return <Alert message={error.message} type="error" />;
@@ -112,7 +112,7 @@ export default function Files() {
       )}
 
       {activeTab === 1 && <Role />}
-      {activeTab === 2 && <UploadDocument />}
+      {/* {activeTab === 2 && <UploadDocument />} */}
     </div>
   );
 }

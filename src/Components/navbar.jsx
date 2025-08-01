@@ -103,7 +103,7 @@ const Navbar = () => {
   // ];
    const navLinks = [
     { name: "Peoples", to: "/people", icon: UsersIcon },
-    { name: "Project ", to: "/time", icon: projectIcon },
+    { name: "Project ", to: "/project", icon: projectIcon },
     // { name: "Leave ", to: "/leave", icon: TbBeach },
     // { name: "Files", to: "/file", icon: FolderIcon },
     // { name: "Tickets", to: "/tickets", icon: IoTicketOutline },

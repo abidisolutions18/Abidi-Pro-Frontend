@@ -94,7 +94,7 @@ const LeaveTracker = () => {
       status: leave.status || "Pending",
     }));
   };
-  const tabs = [{ title: "Summary" }, { title: "Leave Tracker" }, { title: "Leave Management" }]
+  const tabs = [{ title: "Summary" }, { title: "Leave Tracker" }]
 
   return (
     <div className="px-4 py-2">
@@ -127,9 +127,9 @@ const LeaveTracker = () => {
         {
           activeTab===1?<LeaveRequest/>:null          
         }
-  {
+  {/* {
           activeTab===2?<LeaveTrackerAdmin setIsOpen={setHolidayModal} key={adminRefresh} />:null          
-        }
+        } */}
 
 
       </div>

@@ -53,7 +53,7 @@ export const moduleConfigs = {
     links: [
       { name: "Project DashBoard", path: "/project/projectDashboard" },
       { name: "Projects", path: "/project/projects" },
-      // { name: "Assign Task", path: "/project/projectDetailed" },
+      // { name: "Tasks ", path: "/project/projectDetailed" },
       // { name: "My Task", path: "/project/myTask" },
     ],
   },
@@ -62,8 +62,12 @@ export const moduleConfigs = {
     subNavbarKey: "admin",
     links: [
       { name: "Admin DashBoard", path: "/admin/adminDashboard" },
+        { name: "Leave Management", path: "/admin/leaveTrackerAdmin" },
       { name: "User Management", path: "/admin/userManagement" },
-      { name: "Activity Logs", path: "/admin/logs" },
+        { name: "File Management", path: "/admin/upload" },
+      // { name: "Activity Logs", path: "/admin/logs" },
+      { name: "Approve Time Logs", path: "/admin/approve" },
+
       { name: "Assign Ticket", path: "/admin/assign-ticket/:ticketId" },
     ],
   },

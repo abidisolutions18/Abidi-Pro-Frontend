@@ -85,7 +85,7 @@ const Ticket = () => {
 
 
   return (
-    <div className="bg-primary m-5 rounded-2xl min-h-[700px] p-4 md:p-6">
+    <div className="bg-primary m-5 rounded-2xl min-h-[700px] p-4 md:p-2">
 
       <div className="text-text rounded-lg  p-4 md:p-6 min-h-[700px] ">
         {/* Tab Bar */}

@@ -119,24 +119,25 @@ function App() {
           <Route path="upload" element={<UploadDocument />} />
         </Route>
 
-        <Route path="/time/*" element={<AppLayout />}>
+        {/* <Route path="/time/*" element={<AppLayout />}>
           <Route index element={<Navigate to="history" replace />} />
           <Route index path="history" element={<TimeTracker />} />{" "}
           <Route path="approve" element={<ApproveTimelogs />} />
-        </Route>
+        </Route> */}
 
-        <Route path="/tickets/*" element={<AppLayout />}>
+        {/* <Route path="/tickets/*" element={<AppLayout />}>
           <Route index element={<Navigate to="raise" replace />} />
           <Route index path="raise" element={<Ticket />} />
-          <Route path="ticketlist" element={<AdminTickets />} />
+          <Route path="ticketlist" element={<AdminTickets />} /> */}
           {/* <Route path ="leaveTrackerAdmin" element={<LeaveTrackerAdmin/>}/> */}
-        </Route>
+        {/* </Route> */}
+        
         <Route path="/project/*" element={<AppLayout />}>
           <Route index element={<Navigate to="projectDashboard" replace />} />
           <Route index path="projectDashboard" element={<ProjectDashBoard />} />
           <Route path="projects" element={<Projects />} />
-            {/* <Route path="projectDetailed" element={<Project />} />
-            <Route path="myTask" element={<MyTask />} /> */}
+            <Route path="projectDetailed" element={<Project />} />
+            {/* <Route path="myTask" element={<MyTask />} /> */}
 
           {/* <Route path ="leaveTrackerAdmin" element={<LeaveTrackerAdmin/>}/> */}
         </Route>
@@ -150,9 +151,13 @@ function App() {
           <Route index element={<Navigate to="adminDashboard" replace />} /> //
           ✅ Redirect
           <Route index path="adminDashboard" element={<AdminDashBoard />} />
+             <Route path="leaveTrackerAdmin" element={<LeaveTrackerAdmin />} />
+                <Route path="upload" element={<UploadDocument />} />
           <Route path="userManagement" element={<UserManagement />} />
-          <Route path="logs" element={<ActivityLogs />} />
-          <Route path="assign-ticket/:ticketId" element={<AssignTicket />} />
+          {/* <Route path="logs" element={<ActivityLogs />} /> */}
+          <Route path="approve" element={<ApproveTimelogs />} />
+          <Route path="assign-ticket/:ticketId" element={<LeaveTrackerAdmin />} />
+
         </Route>
       </Routes>
     </>

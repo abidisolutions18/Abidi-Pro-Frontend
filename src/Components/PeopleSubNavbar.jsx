@@ -8,23 +8,22 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { toast } from "react-toastify";
 import { setError } from "../slices/attendanceTimer";
 import { useDispatch, useSelector } from "react-redux";
+import AddTimeLogModal from "../Pages/People/AddTimeLogModal";
 
-const SubNavbar = () => {
+const SubNavbar = ({ onAddTimeLog }) => {
   const [openNav, setOpenNav] = useState(false);
   const { start, checkIn, checkOut, loading, error } = useTimeLog();
+  const [isAddTimeLogModalOpen, setIsAddTimeLogModalOpen] = useState(false);
   const checkedIn = Boolean(start);
   const { pathname } = useLocation();
-  const moduleKey = pathname.split("/")[1];
+  const moduleKey = pathname.split("/")[2];
+  // console.log(moduleKey)
   const dispatch = useDispatch();
-  
   // Get user info from Redux store
   const userInfo = useSelector((state) => state.auth.user);
   const userId = userInfo?._id || userInfo?.id;
 
-  console.log('SubNavbar - User ID:', userId);
-  console.log('SubNavbar - User Info:', userInfo);
-
-  const config = moduleConfigs[moduleKey];
+  const config = moduleConfigs[pathname.split("/")[1]];
   const links = config?.links || [];
 
   useEffect(() => {
@@ -35,7 +34,7 @@ const SubNavbar = () => {
       }, 1000);
     })()
   }, [error]);
-  
+
   useEffect(() => {
     const handleResize = () => window.innerWidth >= 960 && setOpenNav(false);
     window.addEventListener("resize", handleResize);
@@ -43,20 +42,12 @@ const SubNavbar = () => {
   }, []);
 
   const handleCheckIn = () => {
-    if (!userId) {
-      toast.error("User ID not found. Please refresh and try again.");
-      return;
-    }
-    checkIn(userId);
+    checkIn();
   };
 
- const handleCheckOut = () => {
-  if (!userId) {
-    toast.error("User ID not found. Please refresh and try again.");
-    return;
-  }
-  checkOut(); // No need to pass userId here as it's handled in TimeLogContext
-};
+  const handleCheckOut = () => {
+    checkOut();
+  };
 
   const navLinks = (
     <ul className="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-6 text-sm font-medium">
@@ -97,10 +88,21 @@ const SubNavbar = () => {
         {/* Nav Links Center */}
         <div className="hidden lg:block">{navLinks}</div>
 
-        {/* Contact Icons Right */}
+        {/* Right side: conditionally show Add Time Log */}
         <div className="hidden lg:flex items-center space-x-4">
-          <PhoneIcon className="w-5 h-5 text-text hover:text-teal-700 cursor-pointer" />
-          <CalendarDaysIcon className="w-5 h-5 text-text hover:text-teal-700 cursor-pointer" />
+          {moduleKey === "history" ? (
+            <Button
+              className="bg-primary text-heading hover:bg-primary-dark text-white"
+              onClick={onAddTimeLog}
+            >
+              Add Time Log
+            </Button>
+          ) : (
+            <>
+              <PhoneIcon className="w-5 h-5 text-text hover:text-teal-700 cursor-pointer" />
+              <CalendarDaysIcon className="w-5 h-5 text-text hover:text-teal-700 cursor-pointer" />
+            </>
+          )}
         </div>
 
         {/* Mobile toggle */}
@@ -141,12 +143,32 @@ const SubNavbar = () => {
         </IconButton>
       </div>
 
+      <AddTimeLogModal
+        isOpen={isAddTimeLogModalOpen}
+        onClose={() => setIsAddTimeLogModalOpen(false)}
+        onSave={(data) => {
+          console.log("Saving time log:", data);
+          setIsAddTimeLogModalOpen(false);
+        }}
+      />
+
       <MobileNav open={openNav}>
         <div className="flex flex-col gap-4 mt-5">
           {navLinks}
-          <div className="flex items-center space-x-4">
-            <PhoneIcon className="w-5 h-5 text-gray-600 hover:text-blue-500 cursor-pointer" />
-            <CalendarDaysIcon className="w-5 h-5 text-gray-600 hover:text-blue-500 cursor-pointer" />
+          <div className="items-center space-x-4">
+            {moduleKey === "history" ? (
+              <Button
+                className="bg-primary text-heading hover:bg-primary-dark text-white"
+                onClick={onAddTimeLog}
+              >
+                Add Time Log
+              </Button>
+            ) : (
+              <>
+                <PhoneIcon className="w-5 h-5 text-text hover:text-teal-700 cursor-pointer" />
+                <CalendarDaysIcon className="w-5 h-5 text-text hover:text-teal-700 cursor-pointer" />
+              </>
+            )}
           </div>
         </div>
       </MobileNav>

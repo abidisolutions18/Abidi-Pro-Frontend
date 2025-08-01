@@ -1,13 +1,11 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import api from "../axios";
 
- 
 export const checkInNow = createAsyncThunk(
   'employee/checkin',
-  async ( data,{ rejectWithValue }) => {
-    console.log(data,"Cow")
+  async (_, { rejectWithValue }) => {  
     try {
-      const response = await api.post('/timetrackers/check-in', {userId:data}, {
+      const response = await api.post('/timetrackers/check-in', {}, {  
         withCredentials: true
       });
       console.log(response.data,"success from api slice")
@@ -19,13 +17,11 @@ export const checkInNow = createAsyncThunk(
   }
 );
 
- 
 export const checkOutNow = createAsyncThunk(
   'employee/checkout',
-  async ( data,{ rejectWithValue }) => {
-        console.log(data,"checkout")
+  async (_, { rejectWithValue }) => {  // Removed userId parameter
     try {
-      const response = await api.post('/timetrackers/check-out',  {userId:data} , {
+      const response = await api.post('/timetrackers/check-out', {}, {  // Empty body
         withCredentials: true
       });
       console.log(response.data,"success from api slice")
@@ -36,7 +32,6 @@ export const checkOutNow = createAsyncThunk(
     }
   }
 );
- 
 const attendanceTimerSlice=createSlice({
     name:'employee',
     initialState:{
@@ -49,7 +44,6 @@ const attendanceTimerSlice=createSlice({
       setError(state,action){
         state.error=action.payload
       }
-
     },
     extraReducers:(builder)=>{
         builder.addCase(checkInNow.pending,(state)=>{
