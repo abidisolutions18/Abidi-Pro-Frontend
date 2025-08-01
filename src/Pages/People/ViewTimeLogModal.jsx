@@ -1,14 +1,24 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { IoClose } from "react-icons/io5";
 import { FaDownload } from 'react-icons/fa';
 
-const ViewTimeLogModal = ({ log, onClose }) => {
+import timeLogApi from "../../api/timeLogApi";
+
+const ViewTimeLogModal = ({ log: propLog, onClose }) => {
+  const [log, setLog] = useState(propLog || null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  console.log("ViewTimeLogModal log:", log);
+
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
   if (!log) return null;
 
-  // This assumes you store the file somewhere accessible by URL:
-  // If it’s saved in storage (e.g., /uploads/myfile.pdf), you can build the URL.
+
+
   const getDownloadLink = (fileName) => {
-    // Example: adjust according to your server/storage setup!
     return `/uploads/${fileName}`;
   };
 
@@ -73,11 +83,11 @@ const ViewTimeLogModal = ({ log, onClose }) => {
             <label className="block text-sm font-semibold mb-1">
               Attachment
             </label>
-            {log.attachmentName ? (
+            {log.attachments ? (
               <div className="px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 flex items-center justify-between">
-                <span>{log.attachmentName}</span>
+                <span>{log.attachments?.[0]?.originalname}</span>
                 <a
-                  href={getDownloadLink(log.attachmentName)}
+                  href={getDownloadLink(log.attachments?.[0]?.originalname)}
                   download
                   className="border-l ml-4 text-sm text-green py-1 px-2 rounded"
                 >
@@ -89,15 +99,6 @@ const ViewTimeLogModal = ({ log, onClose }) => {
                 -
               </p>
             )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold mb-1">
-              Status
-            </label>
-            <p className="px-4 py-2 border border-gray-200 rounded-lg bg-gray-50">
-              {log.status || "-"}
-            </p>
           </div>
 
           <div className="flex justify-end pt-4">
