@@ -13,11 +13,13 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import EditTimeLogModal from "./EditTimeLogModal";
 import ViewTimeLogModal from "./ViewTimeLogModal";
+import timeLogApi from "../../api/timeLogApi"; // Import the API
+import { toast } from "react-toastify";
 
 const TimeTracker = () => {
   const [isAddTimeLogModalOpen, setIsAddTimeLogModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState("add"); // add or edit
-  const [editingLogIndex, setEditingLogIndex] = useState(null);
+  const [modalMode, setModalMode] = useState("add");
+  const [editingLogId, setEditingLogId] = useState(null); // Changed from index to ID
   const [viewingLog, setViewingLog] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 5;
@@ -25,10 +27,34 @@ const TimeTracker = () => {
   const [dateRange, setDateRange] = useState([null, null]);
   const [startDate, endDate] = dateRange;
   const [showCalendar, setShowCalendar] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Fetch time logs from API
+  const fetchTimeLogs = async () => {
+    try {
+      setLoading(true);
+      const response = await timeLogApi.getEmployeeTimeLogs();
+      console.log(response, "Fetched time logs from API");
+      setTimeLogs(response);
+      console.log(timeLogs, "Fetched time logs from API");
+      setError(null);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to load time logs");
+      toast.error("Failed to load time logs");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTimeLogs();
+  }, []);
 
   const parseDate = (dateStr) => {
-    const [dd, mm, yyyy] = dateStr.split("-");
-    return new Date(`${yyyy}-${mm}-${dd}`);
+    if (!dateStr) return new Date();
+    const date = new Date(dateStr);
+    return isNaN(date.getTime()) ? new Date() : date;
   };
 
   const filteredData = timeLogs.filter((item) => {
@@ -49,40 +75,68 @@ const TimeTracker = () => {
     filteredData.length <= rowsPerPage
       ? filteredData
       : filteredData.slice(
-          (currentPage - 1) * rowsPerPage,
-          currentPage * rowsPerPage
-        );
+        (currentPage - 1) * rowsPerPage,
+        currentPage * rowsPerPage
+      );
 
-  const handleSaveLogs = (newLogs) => {
-    const formattedLogs = newLogs.map((log) => ({
-      jobTitle: log.jobTitle,
-      date: log.date,
-      description: log.description,
-      totalHours: log.hours,
-      attachmentName: log.attachmentName,
-      status: "Pending",
-    }));
+  const handleSaveLogs = async (newLogs) => {
+    try {
+      if (modalMode === "add") {
+        // Handle multiple log creation
+        for (const log of newLogs) {
+          const formData = new FormData();
+          formData.append('job', log.jobTitle);
+          formData.append('date', log.date);
+          formData.append('hours', log.totalHours);
+          formData.append('description', log.description);
+          if (log.attachment) {
+            formData.append('attachments', log.attachment);
+          }
+          await timeLogApi.createTimeLog(formData);
+        }
+      } else if (modalMode === "edit" && editingLogId) {
+        const log = newLogs[0];
+        const formData = new FormData();
+        formData.append('job', log.jobTitle);
+        formData.append('date', log.date);
+        formData.append('hours', log.totalHours);
+        formData.append('description', log.description);
+        if (log.attachment) {
+          formData.append('attachments', log.attachment);
+        }
+        await timeLogApi.updateTimeLog(editingLogId, formData);
+      }
 
-    if (modalMode === "add") {
-      setTimeLogs((prev) => [...prev, ...formattedLogs]);
-    } else if (modalMode === "edit" && editingLogIndex !== null) {
-      const updatedLogs = [...timeLogs];
-      updatedLogs[editingLogIndex] = {
-        ...formattedLogs[0],
-        status: timeLogs[editingLogIndex].status, // keep status
-      };
-      setTimeLogs(updatedLogs);
+      await fetchTimeLogs(); // Wait for refresh
+      setIsAddTimeLogModalOpen(false);
+      setEditingLogId(null);
+      setModalMode("add");
+      toast.success("Time log saved successfully");
+
+    } catch (error) {
+      console.error("Failed to save time log:", error);
+      toast.error(error.response?.data?.message || "Failed to save time log");
     }
-
-    setIsAddTimeLogModalOpen(false);
-    setEditingLogIndex(null);
-    setModalMode("add");
   };
 
-  const handleDelete = (index) => {
-    const updated = [...timeLogs];
-    updated.splice(index, 1);
-    setTimeLogs(updated);
+  const handleDelete = async (id) => {
+    try {
+      await timeLogApi.deleteTimeLog(id);
+      fetchTimeLogs(); // Refresh the list
+      toast.success("Time log deleted successfully");
+    } catch (error) {
+      console.error("Failed to delete time log:", error);
+      toast.error(error.response?.data?.message || "Failed to delete time log");
+    }
+  };
+
+  const handleViewLog = (log) => {
+    setViewingLog({
+      ...log,
+      jobTitle: log.job,
+      totalHours: log.hours,
+      attachmentName: log.attachments?.[0]?.filename
+    });
   };
 
   return (
@@ -90,7 +144,7 @@ const TimeTracker = () => {
       <SubNavbar
         onAddTimeLog={() => {
           setModalMode("add");
-          setEditingLogIndex(null);
+          setEditingLogId(null);
           setIsAddTimeLogModalOpen(true);
         }}
       />
@@ -103,11 +157,10 @@ const TimeTracker = () => {
             <button
               onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
               disabled={currentPage === 1}
-              className={`px-3 py-1 rounded ${
-                currentPage === 1
-                  ? "bg-gray-300 cursor-not-allowed"
-                  : "bg-primary text-white"
-              }`}
+              className={`px-3 py-1 rounded ${currentPage === 1
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-primary text-white"
+                }`}
             >
               <FaAngleLeft size={16} />
             </button>
@@ -141,11 +194,10 @@ const TimeTracker = () => {
                 setCurrentPage((p) => (p < totalPages ? p + 1 : p))
               }
               disabled={currentPage >= totalPages}
-              className={`px-3 py-1 rounded ${
-                currentPage >= totalPages
-                  ? "bg-gray-300 cursor-not-allowed"
-                  : "bg-primary text-white"
-              }`}
+              className={`px-3 py-1 rounded ${currentPage >= totalPages
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-primary text-white"
+                }`}
             >
               <FaAngleRight size={16} />
             </button>
@@ -154,113 +206,124 @@ const TimeTracker = () => {
             <span className="text-sm text-text">Submitted Hours | 00:00</span>
           </div>
         </div>
+
+        {/* Loading and Error States */}
+        {loading && (
+          <div className="text-center p-4">Loading time logs...</div>
+        )}
+        {error && (
+          <div className="text-red-500 p-4 text-center">{error}</div>
+        )}
+
         {/* Table */}
-        <div className="bg-background rounded-xl shadow p-4 w-full overflow-x-auto">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={JSON.stringify(dateRange) + currentPage}
-              initial={{ x: 300, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -300, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <table className="min-w-full text-sm text-left border-separate border-spacing-0">
-                <thead className="bg-primary text-white">
-                  <tr>
-                    {[
-                      "Job Title",
-                      "Date",
-                      "Description",
-                      "Hours",
-                      "Attachment",
-                      "Status",
-                      "Actions",
-                    ].map((heading) => (
-                      <th
-                        key={heading}
-                        className="p-3 font-medium border-r last:border-none border-gray-300"
-                      >
-                        {heading}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedData.length ? (
-                    paginatedData.map((item, index) => (
-                      <tr key={index} className="border-b hover:bg-gray-50">
-                        <td className="p-3">{item.jobTitle || "-"}</td>
-                        <td className="p-3">{item.date}</td>
-                        <td className="p-3">{item.description}</td>
-                        <td className="p-3">{item.totalHours}</td>
-                        <td className="p-3">{item.attachmentName || "-"}</td>
-                        <td className="p-3">
-                          <span
-                            className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              item.status === "Approved"
-                                ? "bg-green-100 text-green-700"
-                                : item.status === "Denied"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-yellow-100 text-yellow-700"
-                            }`}
-                          >
-                            {item.status}
-                          </span>
-                        </td>
-                        <td className="p-3 flex gap-2">
-                          <button
-                            onClick={() => setViewingLog(item)}
-                            className="text-blue-600 hover:text-blue-800"
-                          >
-                            <IoEye />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditingLogIndex(index);
-                              setModalMode("edit");
-                              setIsAddTimeLogModalOpen(true);
-                            }}
-                            className="text-green-600 hover:text-green-800"
-                          >
-                            <IoPencil />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(index)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            <IoTrash />
-                          </button>
+        {!loading && !error && (
+          <div className="bg-background rounded-xl shadow p-4 w-full overflow-x-auto">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={JSON.stringify(dateRange) + currentPage}
+                initial={{ x: 300, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: -300, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <table  className="min-w-full text-sm text-left border-separate border-spacing-0">
+                  <thead className="bg-primary text-white">
+                    <tr>
+                      {[
+                        "Job Title",
+                        "Date",
+                        "Description",
+                        "Hours",
+                        "Attachment",
+                        "Actions",
+                      ].map((heading) => (
+                        <th
+                          key={heading}
+                          className="p-3 font-medium border-r last:border-none border-gray-300"
+                        >
+                          {heading}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedData.length ? (
+                      paginatedData.map((item, index) => (
+                        <tr key={item._id} className="border-b hover:bg-gray-50 cursor-pointer" >
+                          <td className="p-3" onClick={() => handleViewLog(item)}>{item.job || "-"}</td>
+                          <td className="p-3" onClick={() => handleViewLog(item)}>{new Date(item.date).toLocaleDateString()}</td>
+                          <td className="p-3" onClick={() => handleViewLog(item)}>{item.description}</td>
+                          <td className="p-3" onClick={() => handleViewLog(item)}>{item.hours}</td>
+                          <td className="p-3" onClick={() => handleViewLog(item)}>{item.attachments?.[0]?.originalname || "-"}</td>
+                          <td className="p-3 flex gap-2">
+                            <button
+                              onClick={() => handleViewLog(item)}
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              <IoEye />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingLogId(item._id);
+                                setModalMode("edit");
+                                setIsAddTimeLogModalOpen(true);
+                              }}
+                              className="text-green-600 hover:text-green-800"
+                            >
+                              <IoPencil />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(item._id)}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              <IoTrash />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={7} className="p-4 text-center text-gray-500">
+                          No records found for selected range
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={7} className="p-4 text-center text-gray-500">
-                        No records found for selected range
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </motion.div>
-          </AnimatePresence>
-        </div>
+                    )}
+                  </tbody>
+                </table>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        )}
       </div>
+
       {/* Add Modal */}
       <AddTimeLogModal
         isOpen={modalMode === "add" && isAddTimeLogModalOpen}
         onClose={() => setIsAddTimeLogModalOpen(false)}
         onSave={handleSaveLogs}
+        onTimeLogAdded={fetchTimeLogs}
       />
-      {/* Add/Edit Modal */}
+
+      {/* Edit Modal */}
       <EditTimeLogModal
         isOpen={modalMode === "edit" && isAddTimeLogModalOpen}
-        onClose={() => setIsAddTimeLogModalOpen(false)}
-        onSave={handleSaveLogs}
-        initialData={timeLogs[editingLogIndex]}
+        onClose={() => {
+          setIsAddTimeLogModalOpen(false);
+          setEditingLogId(null);
+        }}
+        onTimeLogUpdated={fetchTimeLogs} // Add this to refetch after update
+        timeLogId={editingLogId}
+        initialData={timeLogs.find(log => log._id === editingLogId)}
       />
+
       {/* View Modal */}
-      <ViewTimeLogModal log={viewingLog} onClose={() => setViewingLog(null)} />
+     {viewingLog && (
+  <ViewTimeLogModal
+    key={viewingLog._id} // forces remount
+    log={viewingLog}
+    onClose={() => setViewingLog(null)}
+  />
+)}
     </>
   );
 };

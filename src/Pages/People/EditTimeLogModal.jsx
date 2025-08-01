@@ -1,24 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { IoClose } from "react-icons/io5";
+import timeLogApi from "../../api/timeLogApi";
 
-const EditTimeLogModal = ({ isOpen, onClose, onSave, initialData }) => {
+const EditTimeLogModal = ({ isOpen, onClose, onSave, initialData , timeLogId, onTimeLogUpdated }) => {
   const [date, setDate] = useState("");
   const [jobTitle, setJobTitle] = useState("");
   const [hours, setHours] = useState("");
   const [description, setDescription] = useState("");
   const [attachmentName, setAttachmentName] = useState("");
   const [newAttachment, setNewAttachment] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (initialData) {
-      setDate(initialData.date);
-      setJobTitle(initialData.jobTitle);
-      setHours(initialData.totalHours);
-      setDescription(initialData.description);
-      setAttachmentName(initialData.attachmentName || "");
-      setNewAttachment(null); // clear new file when modal reopens
-    }
-  }, [initialData]);
+useEffect(() => {
+  if (initialData) {
+    setDate(initialData.date);
+    setJobTitle(initialData.job || initialData.jobTitle); // Handle both cases
+    setHours(initialData.hours || initialData.totalHours);
+    setDescription(initialData.description);
+    setAttachmentName(initialData.attachments?.[0]?.originalname || initialData.attachmentName || "");
+  }
+}, [initialData]);
 
   const isDateValid = Boolean(date);
   const isHoursValid = Number(hours) > 0;
@@ -26,20 +27,29 @@ const EditTimeLogModal = ({ isOpen, onClose, onSave, initialData }) => {
 
   const isCurrentInputValid = isDateValid && isHoursValid && isDescriptionValid;
 
-  const handleSave = () => {
-    if (isCurrentInputValid) {
-      onSave([
-        {
-          jobTitle,
-          date,
-          description: description.trim(),
-          hours: parseFloat(hours),
-          attachmentName: newAttachment
-            ? newAttachment.name
-            : attachmentName,
-        },
-      ]);
-    }
+  const handleSave = async () => {
+    setIsLoading(true);
+    try {
+      if (!isCurrentInputValid || !timeLogId) return;
+
+      const formData = new FormData();
+      formData.append('job', jobTitle);
+      formData.append('date', date);
+      formData.append('hours', hours);
+      formData.append('description', description);
+      if (newAttachment) {
+        formData.append('attachments', newAttachment);
+      }
+
+      await timeLogApi.updateTimeLog(timeLogId, formData);
+      
+      onTimeLogUpdated(); 
+      onClose();
+    } catch (error) {
+      console.error("Failed to update time log:", error);
+    } finally {
+    setIsLoading(false);
+  }
   };
 
   return (
