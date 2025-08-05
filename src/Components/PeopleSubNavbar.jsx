@@ -71,11 +71,9 @@ const SubNavbar = ({ onAddTimeLog, activeTab, onCreateTimesheet }) => {
       <div className="flex items-center justify-between text-blue-gray-900">
         {/* Check In/Out Button */}
         <Button
-          size="large"
-          className={`w-32 text-center font-semibold shadow transition px-5 py-3 ${checkedIn
-            ? "bg-red-400 text-red-800"
-            : "bg-green-400 text-green-800"
-            }`}
+          size="lg"
+          className={`my-2 py-2 w-full max-w-[140px] font-semibold shadow transition ${checkedIn ? "bg-red-400 text-red-800" : "bg-green-400 text-green-800"
+            } ${loading || !userId ? 'opacity-50 cursor-not-allowed' : ''}`}
           onClick={checkedIn ? handleCheckOut : handleCheckIn}
           disabled={loading || !userId}
         >

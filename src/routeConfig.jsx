@@ -70,7 +70,7 @@ export const moduleConfigs = {
       // { name: "Activity Logs", path: "/admin/logs" },
       { name: "Approve Time Sheets", path: "/admin/approve" },
 
-      { name: "Assign Ticket", path: "/admin/assign-ticket/:ticketId" },
+      { name: "Assign Ticket", path: "/admin/assign-ticket" },
     ],
   },
 

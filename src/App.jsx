@@ -158,8 +158,8 @@ function App() {
           <Route path="userManagement" element={<UserManagement />} />
           {/* <Route path="logs" element={<ActivityLogs />} /> */}
           <Route path="approve" element={<ApproveTimelogs />} />
-          <Route path="assign-ticket/:ticketId" element={<AdminTickets />} />
-
+          <Route path="assign-ticket" element={<AdminTickets />} />
+          <Route path="assign-ticket/:ticketId" element={<AssignTicket />} />
         </Route>
       </Routes>
     </>
