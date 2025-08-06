@@ -3,7 +3,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import "./index.css"; // your Tailwind styles
 
 // Layouts
-import AppLayout from "./Layout/AppLayout";
+import AppLayout from "./layout/AppLayout";
 import AuthLayout from "./layout/AuthLayout";
 
 // Pages
@@ -14,7 +14,7 @@ import ResetPassword from "./Pages/login/Resetpassword";
 import Home from "./Pages/People/Home";
 import TimeTracker from "./Pages/People/TimeTracker";
 import Files from "./Pages/People/Files";
-import Profile from "./Pages/People/profile";
+import Profile from "./Pages/People/Profile";
 import Attendance from "./Pages/People/Attendance";
 import EditProfile from "./Pages/People/EditProfile";
 import LeaveTracker from "./Pages/People/LeaveTracker";
@@ -30,7 +30,7 @@ import { ToastContainer } from "react-toastify";
 import PrivateRoute from "./Components/PrivateRoute";
 import PublicRoute from "./Components/PublicRoute";
 import "react-toastify/dist/ReactToastify.css";
-import VerifyOtp from "./Pages/login/VerifyOTP";
+import VerifyOtp from "./Pages/login/VerifyOtp";
 import Ticket from "./Pages/Tickets/Ticket";
 import AdminTickets from "./Pages/Tickets/AdminTickets";
 import AdminDashBoard from "./Pages/Admin/AdminDashBoard";
@@ -44,6 +44,7 @@ import FAQs from "./Pages/People/FAQ";
 // import RequestHR from "./Pages/People/
 import useTokenRefresh from "./Hooks/useTokenRefresh";
 import AssignTicket from "./Pages/Tickets/AssignTickets";
+import ProjectDetail from "./Pages/Projects/ProjectDetail";
 
 function App() {
   useAutoLogin();
@@ -138,7 +139,7 @@ function App() {
           <Route index element={<Navigate to="projectDashboard" replace />} />
           <Route index path="projectDashboard" element={<ProjectDashBoard />} />
           <Route path="projects" element={<Projects />} />
-            <Route path="projectDetailed/:id" element={<Project />} />
+            <Route path="projectDetailed/:id" element={<ProjectDetail />} />
             {/* <Route path="myTask" element={<MyTask />} /> */}
 
           {/* <Route path ="leaveTrackerAdmin" element={<LeaveTrackerAdmin/>}/> */}
