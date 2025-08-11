@@ -120,14 +120,42 @@ export function useFileUploader() {
     setError(null);
 
     try {
-      const { data } = await api.post('/files/files/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+      // 1. Prepare FormData for backend (which sends to Cloudinary)
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('folderId', folderId); // Optional, if backend uses it
+      formData.append('isPublic', accessSettings?.isPublic || false);
+      formData.append('sharedWithEmails', JSON.stringify(accessSettings?.userEmails || []));
+
+      // 2. Upload to backend → which handles multer + cloudinary upload
+      const response = await fetch('/api/files/upload', {
+        method: 'POST',
+        body: formData
       });
-      
-      // Return the data for further processing if needed
-      return data.status === 'success' ? data.data : data;
+
+      const   result = await response.json();
+
+      if (!response.ok) throw new Error(result.error || 'Upload failed');
+
+      // 3. (Optional) Save file record to DB if backend didn’t already
+      const fileData = {
+        name: result.original_filename,
+        folderId,
+        cloudinaryId: result.public_id,
+        url: result.secure_url,
+        size: result.bytes,
+        mimeType: `${result.resource_type}/${result.format}`,
+        ...(accessSettings && {
+          isPublic: accessSettings.isPublic,
+          sharedWithRoles: accessSettings.sharedWithRoles,
+          sharedWithEmails: accessSettings.userEmails
+        })
+      };
+
+      const { data } = await api.post('/files/files/upload', fileData);
+
+      return data;
+
     } catch (e) {
       setError(e);
       console.error('Upload error:', e);
