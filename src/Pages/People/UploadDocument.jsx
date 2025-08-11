@@ -1,5 +1,4 @@
 "use client"
-
 import { useState } from "react"
 import { useSelector } from "react-redux"
 import { Drawer, TextField, Menu, MenuItem, IconButton } from "@mui/material"
@@ -17,7 +16,7 @@ import { toast } from "react-toastify"
 import { IoEllipsisVertical } from "react-icons/io5"
 
 const UploadDocument = () => {
-  const [folderStack, setFolderStack] = useState([]) // Stack to hold navigation path
+  const [folderStack, setFolderStack] = useState([])
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [folderName, setFolderName] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
@@ -25,109 +24,128 @@ const UploadDocument = () => {
   const [fileMenuAnchor, setFileMenuAnchor] = useState(null)
   const [selectedFolderId, setSelectedFolderId] = useState(null)
   const [selectedFileId, setSelectedFileId] = useState(null)
-const [shareModalOpen, setShareModalOpen] = useState(false);
-const [currentFile, setCurrentFile] = useState(null);
-const [accessSettings, setAccessSettings] = useState({
-  isPublic: false,
-  sharedWithRoles: [],
-  userEmails: []
-});
-const handleShareFile = (e) => {
-   console.log("uploading file", e.target.files[0])
-    const file = e.target.files[0]
-  setCurrentFile(file);
-  setAccessSettings({
+  const [shareModalOpen, setShareModalOpen] = useState(false)
+  const [currentFile, setCurrentFile] = useState(null)
+  const [accessSettings, setAccessSettings] = useState({
     isPublic: false,
     sharedWithRoles: [],
-    userEmails:[],
+    userEmails: []
   })
-  setShareModalOpen(true);
-};
-const handleOpenAccessModal=()=>{
-    setShareModalOpen(true);
-}
 
+  const handleShareFile = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    
+    setCurrentFile(file)
+    setAccessSettings({
+      isPublic: false,
+      sharedWithRoles: [],
+      userEmails: []
+    })
+    setShareModalOpen(true)
+  }
 
-  
+  const handleOpenAccessModal = () => {
+    setShareModalOpen(true)
+  }
+
   const data = useSelector((state) => state)
-  const { user } = data?.auth
-  const currentFolder = folderStack[folderStack.length - 1] || { id: "root", name: "Root" }
-  const folderId = currentFolder._id
-  const folderPath = `users/${user.id}/${folderStack.map((f) => f.id).join("/") || "root"}`
+  const { user } = data?.auth || {}
+  
+  // Current folder logic - start with 'root'
+  const currentFolder = folderStack.length > 0 
+    ? folderStack[folderStack.length - 1] 
+    : { id: "root", name: "Root", _id: "root" }
+  
+  const folderId = currentFolder._id === "root" ? 'root' : currentFolder._id
 
-  const { folders, files, loading, error, reload } = useFolderContents(folderId)
+  const { 
+    folders = [], 
+    files = [], 
+    loading, 
+    error, 
+    reload 
+  } = useFolderContents(folderId)
+  
   const { create, loading: creating, error: createErr } = useFolderCreator()
-  const { upload, loading: uploading, error: uploadErr,updateFileAccess } = useFileUploader()
-  const { softDelete: deleteFile, loading: fileDeleteLoading, error: fileDeleteError } = useFileDeleter()
-  const { softDelete: deleteFolder, loading: folderDeleteLoading, error: folderDeleteError } = useFolderDeleter()
-  const { download, loading:downloadLoading, error:downloadError } = useFileDownloader()
+  const { upload, loading: uploading, error: uploadErr, updateFileAccess } = useFileUploader()
+  const { softDelete: deleteFile, loading: fileDeleteLoading } = useFileDeleter()
+  const { softDelete: deleteFolder, loading: folderDeleteLoading } = useFolderDeleter()
+  const { download, loading: downloadLoading } = useFileDownloader()
+  
   const toggleDrawer = (open) => () => setDrawerOpen(open)
-console.log(selectedFileId)
-
 
   const handleNewFolder = async () => {
-    console.log("creating folder", user._id + "fff" + folderName)
     if (!folderName.trim()) {
       toast.error("Folder name is required")
       return
     }
     try {
-      await create({ name: folderName, parentId: folderId, ownerId: user._id })
+      await create({ 
+        name: folderName, 
+        parentId: folderId, // Use current folderId instead of null check
+        ownerId: user?._id 
+      })
       setFolderName("")
       setDrawerOpen(false)
       reload()
+      toast.success("Folder created successfully")
     } catch (err) {
       toast.error("Failed to create folder")
+      console.error(err)
     }
   }
-async function downloadFile(url, filename = 'file.docx') {
-  try {
-    const response = await fetch(url, {
-      mode: 'cors' // Cloudinary supports CORS on raw files
-    });
-    
-    if (!response.ok) throw new Error('Failed to download file');
 
-    const blob = await response.blob();
-    const blobUrl = window.URL.createObjectURL(blob);
-
-    const link = document.createElement('a');
-    link.href = blobUrl;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    window.URL.revokeObjectURL(blobUrl);
-  } catch (error) {
-    console.error('Error downloading file:', error);
-  }
-}
-
-
- const handleFileDownload = async (fileId) => {
-    console.log("downloading file", fileId)
-    const file=files.filter(item=> item._id===fileId)
+  const handleFileDownload = async (fileId) => {
     try {
-      // await download(fileId)
-        downloadFile(file[0].url,file[0].name)
-      // reload()
+      await download(fileId)
     } catch (err) {
-      toast.error("File upload failed")
+      toast.error("Download failed")
+      console.error(err)
     }
   }
+
   const handleFileChange = async (file) => {
-    // console.log("uploading file", e.target.files[0])
-    // const file = e.target.files[0]
-    console.log(file)
     if (!file) return
     try {
-      await upload({ file, folderId, folderPath, accessSettings })
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('folderId', folderId) // Always send folderId
+      
+      await upload(formData)
+      toast.success('File uploaded successfully')
       reload()
     } catch (err) {
       toast.error("File upload failed")
+      console.error(err)
     }
   }
+
+const handleSaveAccessSettings = async () => {
+  try {
+    if (currentFile) {
+      const formData = new FormData();
+      formData.append('file', currentFile);
+      formData.append('folderId', folderId); // Always send folderId
+      formData.append('isPublic', accessSettings.isPublic);
+      formData.append('sharedWithRoles', JSON.stringify(accessSettings.sharedWithRoles));
+      formData.append('userEmails', JSON.stringify(accessSettings.userEmails));
+
+      await upload(formData);
+      toast.success('File uploaded with access settings!');
+    } else if (selectedFileId) {
+      await updateFileAccess(selectedFileId, accessSettings);
+      toast.success('Access updated successfully');
+    }
+    
+    setShareModalOpen(false);
+    setCurrentFile(null); // Reset current file
+    reload();
+  } catch (err) {
+    toast.error('Failed to process file');
+    console.error(err);
+  }
+};
 
   const handleOpenFolder = (folder) => {
     setFolderStack([...folderStack, folder])
@@ -189,134 +207,111 @@ async function downloadFile(url, filename = 'file.docx') {
 
   const handleCloseFileMenu = () => {
     setFileMenuAnchor(null)
-    // setSelectedFileId(null)
+    setSelectedFileId(null)
   }
 
   if (error) return <Alert message={error.message} type="error" />
 
   return (
     <>
-{shareModalOpen && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div className="bg-white p-6 rounded-lg w-full max-w-md">
-      <h3 className="text-lg font-semibold mb-4">Share {currentFile?.name}</h3>
-      
-      <div className="mb-4">
-        <label className="flex items-center">
-          <input 
-            type="checkbox" 
-            checked={accessSettings.isPublic}
-            onChange={(e) => setAccessSettings({
-              ...accessSettings,
-              isPublic: e.target.checked
-            })}
-            className="mr-2"
-          />
-          Make public (anyone with link can view)
-        </label>
-      </div>
+      {shareModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Share {currentFile?.name || files.find(f => f._id === selectedFileId)?.name}</h3>
+            
+            <div className="mb-4">
+              <label className="flex items-center">
+                <input 
+                  type="checkbox" 
+                  checked={accessSettings.isPublic}
+                  onChange={(e) => setAccessSettings({
+                    ...accessSettings,
+                    isPublic: e.target.checked
+                  })}
+                  className="mr-2"
+                />
+                Make public (anyone with link can view)
+              </label>
+            </div>
 
-      <div className="mb-4">
-        <label className="block mb-2">Share with roles:</label>
-        {['manager', 'employee', 'hr'].map(role => (
-          <label key={role} className="flex items-center mr-4">
-            <input
-              type="checkbox"
-              checked={accessSettings.sharedWithRoles.includes(role)}
-              onChange={(e) => {
-                const newRoles = e.target.checked
-                  ? [...accessSettings.sharedWithRoles, role]
-                  : accessSettings.sharedWithRoles.filter(r => r !== role);
-                setAccessSettings({
-                  ...accessSettings,
-                  sharedWithRoles: newRoles
-                });
-              }}
-              className="mr-2"
-            />
-            {role}
-          </label>
-        ))}
-      </div>
+            <div className="mb-4">
+              <label className="block mb-2">Share with roles:</label>
+              {['manager', 'employee', 'hr'].map(role => (
+                <label key={role} className="flex items-center mr-4">
+                  <input
+                    type="checkbox"
+                    checked={accessSettings.sharedWithRoles.includes(role)}
+                    onChange={(e) => {
+                      const newRoles = e.target.checked
+                        ? [...accessSettings.sharedWithRoles, role]
+                        : accessSettings.sharedWithRoles.filter(r => r !== role);
+                      setAccessSettings({
+                        ...accessSettings,
+                        sharedWithRoles: newRoles
+                      });
+                    }}
+                    className="mr-2"
+                  />
+                  {role}
+                </label>
+              ))}
+            </div>
 
-      <div className="mb-4">
-        <label className="block mb-2">Share with specific people:</label>
-        <input
-          type="email"
-          placeholder="Enter email"
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && e.target.value) {
-              setAccessSettings({
-                ...accessSettings,
-                userEmails: [...accessSettings.userEmails, e.target.value]
-              });
-              e.target.value = '';
-            }
-          }}
-          className="border p-2 w-full"
-        />
-        <div className="mt-2 flex flex-wrap gap-2">
-          {accessSettings.userEmails.map(email => (
-            <span key={email} className="bg-gray-100 px-2 py-1 rounded flex items-center">
-              {email}
+            <div className="mb-4">
+              <label className="block mb-2">Share with specific people:</label>
+              <input
+                type="email"
+                placeholder="Enter email"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && e.target.value) {
+                    setAccessSettings({
+                      ...accessSettings,
+                      userEmails: [...accessSettings.userEmails, e.target.value]
+                    });
+                    e.target.value = '';
+                  }
+                }}
+                className="border p-2 w-full"
+              />
+              <div className="mt-2 flex flex-wrap gap-2">
+                {accessSettings.userEmails.map(email => (
+                  <span key={email} className="bg-gray-100 px-2 py-1 rounded flex items-center">
+                    {email}
+                    <button
+                      onClick={() => setAccessSettings({
+                        ...accessSettings,
+                        userEmails: accessSettings.userEmails.filter(e => e !== email)
+                      })}
+                      className="ml-2 text-red-500"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2">
               <button
-                onClick={() => setAccessSettings({
-                  ...accessSettings,
-                  userEmails: accessSettings.userEmails.filter(e => e !== email)
-                })}
-                className="ml-2 text-red-500"
+                onClick={() => {
+                  setShareModalOpen(false);
+                  setCurrentFile(null);
+                }}
+                className="px-4 py-2 border rounded"
               >
-                ×
+                Cancel
               </button>
-            </span>
-          ))}
+              <button
+                onClick={handleSaveAccessSettings}
+                className="px-4 py-2 bg-blue-500 text-white rounded"
+                disabled={uploading}
+              >
+                {uploading ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <div className="flex justify-end gap-2">
-        <button
-          onClick={() => setShareModalOpen(false)}
-          className="px-4 py-2 border rounded"
-        >
-          Cancel
-        </button>
-        <button
-        onClick={async () => {
-    try {
-       console.log(currentFile,"sdfffffffff")
-      if (currentFile) {
-        // For new file uploads
-       console.log("uploadign sdfsdfsdfsdfm")
-        await upload({ 
-          file: currentFile, 
-          folderId, 
-          folderPath, 
-          accessSettings 
-        });
-        toast.success('File uploaded with access settings!');
-      } else if (selectedFileId) {
-        // For existing file permission updates
-        await updateFileAccess(selectedFileId, accessSettings);
-        toast.success('Access updated successfully');
-      }
-      setShareModalOpen(false);
-      reload();
-    } catch (err) {
-      toast.error('Failed to process file');
-      setShareModalOpen(false);
-      console.error(err);
-    } finally {
-      // setCurrentFile(null);
-    }
-  }}
-          className="px-4 py-2 bg-blue-500 text-white rounded"
-        >
-          Save
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+      )}
       <Drawer anchor="right" open={drawerOpen} onClose={toggleDrawer(false)}>
         <div className="w-full sm:w-80 md:w-96 h-full bg-white p-6 flex flex-col gap-4">
           <h2 className="text-lg font-semibold text-gray-800">Create Folder</h2>
@@ -340,7 +335,29 @@ async function downloadFile(url, filename = 'file.docx') {
       </Drawer>
 
       <div className="min-h-screen bg-primary p-2 sm:p-4 mx-2 my-4 sm:m-6 rounded-lg shadow-md">
+        {/* Header with breadcrumb */}
         <div className="flex flex-col mb-5 bg-white rounded-lg px-4 py-4 sm:px-8">
+          {/* Breadcrumb */}
+          <div className="mb-4 text-sm text-gray-600">
+            <span 
+              className="cursor-pointer hover:text-blue-600" 
+              onClick={() => setFolderStack([])}
+            >
+              Root
+            </span>
+            {folderStack.map((folder, index) => (
+              <span key={folder._id}>
+                {' > '}
+                <span 
+                  className="cursor-pointer hover:text-blue-600"
+                  onClick={() => setFolderStack(folderStack.slice(0, index + 1))}
+                >
+                  {folder.name}
+                </span>
+              </span>
+            ))}
+          </div>
+
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full">
             <div className="flex flex-wrap items-center gap-3 mb-3 sm:mb-0">
               <div className="flex items-center space-x-2">
@@ -361,12 +378,29 @@ async function downloadFile(url, filename = 'file.docx') {
               />
             </div>
             <div className="flex items-center gap-2">
-              <input type="file" onChange={handleShareFile} className="hidden" id="file-upload" />
+              <input 
+                type="file" 
+                onChange={(e) => handleFileChange(e.target.files[0])} 
+                className="hidden" 
+                id="file-upload" 
+              />
               <label
                 htmlFor="file-upload"
                 className="cursor-pointer bg-[#497a71] text-white text-sm px-4 py-2 rounded-md hover:bg-[#99c7be] hover:text-black"
               >
                 Upload Files
+              </label>
+              <input 
+                type="file" 
+                onChange={handleShareFile} 
+                className="hidden" 
+                id="file-upload-with-share" 
+              />
+              <label
+                htmlFor="file-upload-with-share"
+                className="cursor-pointer bg-blue-500 text-white text-sm px-4 py-2 rounded-md hover:bg-blue-600"
+              >
+                Upload & Share
               </label>
               <button
                 onClick={toggleDrawer(true)}
@@ -375,7 +409,10 @@ async function downloadFile(url, filename = 'file.docx') {
                 <FiUpload /> New Folder
               </button>
               {folderStack.length > 0 && (
-                <button onClick={handleGoBack} className="bg-gray-300 text-sm px-4 py-2 rounded-md hover:bg-gray-400">
+                <button 
+                  onClick={handleGoBack} 
+                  className="bg-gray-300 text-sm px-4 py-2 rounded-md hover:bg-gray-400"
+                >
                   Go Back
                 </button>
               )}
@@ -387,6 +424,19 @@ async function downloadFile(url, filename = 'file.docx') {
 
         <Spin spinning={loading || uploading || creating || fileDeleteLoading || folderDeleteLoading || downloadLoading}>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {/* Show empty state if no folders and no files */}
+            {folders.length === 0 && files.length === 0 && !loading && (
+              <div className="col-span-full text-center py-12 bg-white rounded-lg">
+                <div className="text-gray-500 text-lg">📁</div>
+                <p className="text-gray-500 mt-2">
+                  {currentFolder.name === 'Root' ? 'No folders or files yet' : 'This folder is empty'}
+                </p>
+                <p className="text-gray-400 text-sm mt-1">
+                  Upload files or create folders to get started
+                </p>
+              </div>
+            )}
+
             {/* Folders */}
             {folders.map((folder) => (
               <div
@@ -395,9 +445,12 @@ async function downloadFile(url, filename = 'file.docx') {
                   e.stopPropagation()
                   handleOpenFolder(folder)
                 }}
-                className="flex justify-between items-center bg-white rounded p-4 shadow cursor-pointer"
+                className="flex justify-between items-center bg-white rounded p-4 shadow cursor-pointer hover:shadow-md transition-shadow"
               >
-                📁 {folder.name}
+                <div className="flex items-center">
+                  <span className="text-2xl mr-2">📁</span>
+                  <span className="truncate">{folder.name}</span>
+                </div>
                 <IconButton size="small" onClick={(e) => handleFolderMenuClick(e, folder._id)} className="p-1">
                   <IoEllipsisVertical />
                 </IconButton>
@@ -406,9 +459,12 @@ async function downloadFile(url, filename = 'file.docx') {
 
             {/* Files */}
             {files.map((file) => (
-              <div key={file._id} className="flex justify-between items-center bg-white rounded p-4 shadow">
-                📄 {file.name}
-                <IconButton size="small" onClick={(e) => handleFileMenuClick(e, file._id)} className="p-1">
+              <div key={file._id} className="flex justify-between items-center bg-white rounded p-4 shadow hover:shadow-md transition-shadow">
+                <div className="flex items-center min-w-0">
+                  <span className="text-2xl mr-2">📄</span>
+                  <span className="truncate" title={file.name}>{file.name}</span>
+                </div>
+                <IconButton size="small" onClick={(e) => handleFileMenuClick(e, file._id)} className="p-1 flex-shrink-0">
                   <IoEllipsisVertical />
                 </IconButton>
               </div>
@@ -430,16 +486,15 @@ async function downloadFile(url, filename = 'file.docx') {
             horizontal: "right",
           }}
         >
-        
-          <MenuItem
+          {/* <MenuItem
             onClick={() => {
               console.log("Update folder:", selectedFolderId)
               handleCloseFolderMenu()
               // TODO: Trigger update modal or logic here
             }}
           >
-            Update
-          </MenuItem>
+            Rename
+          </MenuItem> */}
           <MenuItem
             onClick={() => {
               console.log("Delete folder clicked:", selectedFolderId)
@@ -466,18 +521,17 @@ async function downloadFile(url, filename = 'file.docx') {
           }}
         >
            <MenuItem onClick={() => {
+              setSelectedFileId(selectedFileId);
               handleCloseFileMenu();
-              handleOpenAccessModal()
-              // handleShareFile(files.find(f => f._id === selectedFileId));
+              handleOpenAccessModal();
             }}>
             Share
             </MenuItem>
            <MenuItem
             onClick={() => {
-              console.log("Update file:", selectedFileId)
-              handleCloseFileMenu()
+              console.log("Download file:", selectedFileId)
               handleFileDownload(selectedFileId)
-              // TODO: Trigger update modal or logic here
+              handleCloseFileMenu()
             }}
           >
             Download
@@ -489,7 +543,7 @@ async function downloadFile(url, filename = 'file.docx') {
               // TODO: Trigger update modal or logic here
             }}
           >
-            Update
+            Rename
           </MenuItem>
           <MenuItem
             onClick={() => {

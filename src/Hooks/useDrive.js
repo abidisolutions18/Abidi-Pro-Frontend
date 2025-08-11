@@ -10,15 +10,22 @@ export function useFolderContents(folder) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const folderId = folder || 'root'
+  
   const reload = useCallback(async () => {
     setLoading(true);
     setError(null)
     try {
-      console.log(folderId, "hello")
-      const { data } = await api.get(`/files/folders/${folderId || 'root'}/contents`)
+      const { data } = await api.get(`/files/folders/${folderId}/contents`)
       console.log("getting files and folder", data)
-      setFolders(data.folders)
-      setFiles(data.files)
+      
+      // Handle the response structure properly
+      if (data.status === 'success') {
+        setFolders(data.data?.folders || [])
+        setFiles(data.data?.files || [])
+      } else {
+        setFolders(data.folders || [])
+        setFiles(data.files || [])
+      }
     } catch (e) {
       setError(e)
       console.log(e, "get files")
@@ -43,7 +50,17 @@ export function useMyFiles() {
     try {
       const { data } = await api.get('/files/files/getMyFiles');
       console.log("Fetched my files:", data);
-      setFiles(data.files);
+      
+      // Handle different response formats
+      if (data.status === 'success') {
+        setFiles(data.data?.files || []);
+      } else if (data.files) {
+        setFiles(data.files);
+      } else if (Array.isArray(data)) {
+        setFiles(data);
+      } else {
+        setFiles([]);
+      }
     } catch (err) {
       console.error("Error fetching my files:", err);
       setError(err);
@@ -59,7 +76,6 @@ export function useMyFiles() {
   return { files, loading, error, reload: fetchMyFiles };
 }
 
-
 /** 2️⃣ Download a file */
 export function useFileDownloader() {
   const [loading, setLoading] = useState(false)
@@ -68,10 +84,25 @@ export function useFileDownloader() {
   const download = useCallback(async (fileId) => {
     setLoading(true); setError(null)
     try {
-      const { data: { downloadUrl } } = await api.get(`/files/files/${fileId}/download`)
-      window.open(downloadUrl, '_blank')
+      const { data } = await api.get(`/files/files/${fileId}/download`)
+      
+      // Handle different response formats
+      let downloadUrl;
+      if (data.status === 'success') {
+        downloadUrl = data.data?.downloadUrl;
+      } else {
+        downloadUrl = data.downloadUrl;
+      }
+      
+      if (downloadUrl) {
+        window.open(downloadUrl, '_blank')
+      } else {
+        throw new Error('Download URL not found');
+      }
     } catch (e) {
       setError(e)
+      console.error('Download error:', e);
+      throw e;
     } finally {
       setLoading(false)
     }
@@ -83,49 +114,20 @@ export function useFileDownloader() {
 export function useFileUploader() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const cloudinaryProjectName = import.meta.env.VITE_REACT_APP_CLOUDINARY_CLOUD_NAME;
-  // const { user } = useSelector(state => state.auth);
-const upload = useCallback(async ({ file, folderId, accessSettings }) => {
+
+  const upload = useCallback(async (formData) => {
     setLoading(true);
     setError(null);
 
     try {
-      // 1. Prepare FormData for backend (which sends to Cloudinary)
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('folderId', folderId); // Optional, if backend uses it
-      formData.append('isPublic', accessSettings?.isPublic || false);
-      formData.append('sharedWithEmails', JSON.stringify(accessSettings?.userEmails || []));
-
-      // 2. Upload to backend → which handles multer + cloudinary upload
-      const response = await fetch('/api/files/upload', {
-        method: 'POST',
-        body: formData
+      const { data } = await api.post('/files/files/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       });
-
-      const result = await response.json();
-
-      if (!response.ok) throw new Error(result.error || 'Upload failed');
-
-      // 3. (Optional) Save file record to DB if backend didn’t already
-      const fileData = {
-        name: result.original_filename,
-        folderId,
-        cloudinaryId: result.public_id,
-        url: result.secure_url,
-        size: result.bytes,
-        mimeType: `${result.resource_type}/${result.format}`,
-        ...(accessSettings && {
-          isPublic: accessSettings.isPublic,
-          sharedWithRoles: accessSettings.sharedWithRoles,
-          sharedWithEmails: accessSettings.userEmails
-        })
-      };
-
-      const { data } = await api.post('/files/files/upload', fileData);
-
-      return data;
-
+      
+      // Return the data for further processing if needed
+      return data.status === 'success' ? data.data : data;
     } catch (e) {
       setError(e);
       console.error('Upload error:', e);
@@ -135,52 +137,21 @@ const upload = useCallback(async ({ file, folderId, accessSettings }) => {
     }
   }, []);
 
-
-  // NEW: Function to update file access
- const updateFileAccess = useCallback(async (fileId, accessSettings) => {
-  setLoading(true);
-  setError(null);
-
-  try {
-    console.log(fileId, "file id not null");
-
-    const { data } = await api.patch(`/files/files/${fileId}/access`, {
-      isPublic: accessSettings.isPublic,
-      aclUpdates: accessSettings.userEmails?.map(email => ({
-        email,
-        role: 'viewer',       // or 'editor', if you plan to support editing
-        accessType: 'user'    // You might expand this in the future for 'group' or 'link'
-      })) || []
-    });
-
-    return data; // Updated file doc from server
-  } catch (e) {
-    setError(e);
-    console.error("Failed to update access:", e);
-    throw e;
-  } finally {
-    setLoading(false);
-  }
-}, []);
-
-  // NEW: Function to get current access settings
-  const getFileAccess = useCallback(async (fileId) => {
+  const updateFileAccess = useCallback(async (fileId, accessSettings) => {
     setLoading(true);
     setError(null);
 
     try {
-      const { data } = await api.get(`/files/${fileId}`);
+      const { data } = await api.patch(`/files/files/${fileId}/access`, {
+        isPublic: accessSettings.isPublic,
+        sharedWithRoles: accessSettings.sharedWithRoles,
+        userEmails: accessSettings.userEmails
+      });
       
-      return {
-        isPublic: data.isPublic,
-        sharedWithRoles: data.sharedWithRoles,
-        userEmails: data.acl
-          .filter(entry => entry.email)
-          .map(entry => entry.email)
-      };
+      return data.status === 'success' ? data.data : data;
     } catch (e) {
       setError(e);
-      console.error("Failed to fetch access settings:", e);
+      console.error("Failed to update access:", e);
       throw e;
     } finally {
       setLoading(false);
@@ -189,12 +160,12 @@ const upload = useCallback(async ({ file, folderId, accessSettings }) => {
 
   return { 
     upload, 
-    updateFileAccess, // Add to return object
-    getFileAccess,    // Add to return object
+    updateFileAccess,
     loading, 
     error 
   };
 }
+
 /** 4️⃣ Create a new folder */
 export function useFolderCreator() {
   const [loading, setLoading] = useState(false)
@@ -203,12 +174,17 @@ export function useFolderCreator() {
   const create = useCallback(async ({ name, parentId, ownerId }) => {
     setLoading(true); setError(null)
     try {
-      const { data } = await api.post('/files/folders', { name, parentId, ownerId })
-      // console.log(data,"green")
-      return data
+      const { data } = await api.post('/files/folders', { 
+        name, 
+        parentId: parentId === 'root' ? null : parentId, // Handle 'root' case
+        ownerId 
+      })
+      console.log("Folder creation response:", data)
+      
+      return data.status === 'success' ? data.data : data;
     } catch (e) {
       setError(e)
-      console.log(e.response.data)
+      console.log(e.response?.data)
       throw e
     } finally {
       setLoading(false)
@@ -217,8 +193,6 @@ export function useFolderCreator() {
 
   return { create, loading, error }
 }
-
-
 
 /** 5️⃣ Soft delete a file */
 export function useFileDeleter() {
@@ -229,7 +203,7 @@ export function useFileDeleter() {
     setLoading(true); setError(null);
     try {
       const { data } = await api.patch(`/files/files/${fileId}/soft-delete`);
-      return data;
+      return data.status === 'success' ? data.data : data;
     } catch (e) {
       setError(e);
       throw e;
@@ -250,7 +224,7 @@ export function useFolderDeleter() {
     setLoading(true); setError(null);
     try {
       const { data } = await api.patch(`/files/folders/folders/${folderId}/soft-delete`);
-      return data;
+      return data.status === 'success' ? data.data : data;
     } catch (e) {
       setError(e);
       throw e;
