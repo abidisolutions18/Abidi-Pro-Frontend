@@ -16,6 +16,7 @@ const LeaveTracker = () => {
   const [holidayModal, setHolidayModal] = useState(false);
   const [leaves, setLeaves] = useState([]);
   const [holidays, setHolidays] = useState([]);
+  const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState({
     leaves: true,
     holidays: true
@@ -25,6 +26,19 @@ const LeaveTracker = () => {
   const [errorMsg, setErrorMsg] = useState("");
   const user = useSelector(state => state.auth.user);
   const [activeTab, setActiveTab] = useState(0)
+
+  // Fetch user profile to get leave balances
+  const fetchUserProfile = async () => {
+    try {
+      if (user?._id || user?.id) {
+        const userId = user._id || user.id;
+        const response = await api.get(`/users/${userId}`);
+        setUserProfile(response.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch user profile:", err);
+    }
+  };
   const fetchLeaves = async () => {
     try {
       const response = await api.get("/leaves");
@@ -52,6 +66,7 @@ const LeaveTracker = () => {
   };
 
   useEffect(() => {
+    fetchUserProfile();
     fetchLeaves();
     fetchHolidays();
   }, []);
@@ -136,7 +151,11 @@ const LeaveTracker = () => {
       <ApplyLeaveModal
         isOpen={isOpen}
         setIsOpen={setIsOpen}
-        onLeaveAdded={fetchLeaves}
+        onLeaveAdded={() => {
+          fetchLeaves();
+          fetchUserProfile();
+        }}
+        userLeaves={userProfile?.leaves || {}}
       />
       <AddHolidayModal
         isOpen={holidayModal}

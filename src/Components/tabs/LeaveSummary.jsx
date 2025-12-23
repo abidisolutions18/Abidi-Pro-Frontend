@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import api from "../../axios";
 import AttendanceCard from "../../Components/AttendanceCard";
-import { FaUmbrellaBeach, FaUserFriends, FaHospital } from "react-icons/fa";
+import { FaUmbrellaBeach, FaUserFriends, FaHospital, FaMoneyBillWave, FaBaby, FaUserTie, FaClock, FaCalendarTimes } from "react-icons/fa";
 import { HiOutlineUserRemove } from "react-icons/hi";
+import { MdEventAvailable } from "react-icons/md";
 import HolidayTable from "../../Components/HolidayTable";
 import ApplyLeaveModal from "../../Components/LeaveModal";
 
@@ -11,12 +12,31 @@ const LeaveSummary = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [leaves, setLeaves] = useState([]);
     const [holidays, setHolidays] = useState([]);
+    const [userProfile, setUserProfile] = useState(null);
     const [loading, setLoading] = useState({
         leaves: true,
-        holidays: true
+        holidays: true,
+        userProfile: true
     });
     const [errorMsg, setErrorMsg] = useState("");
     const user = useSelector(state => state.auth.user);
+
+    // Fetch user profile to get leave balances
+    const fetchUserProfile = async () => {
+        try {
+            if (user?._id || user?.id) {
+                const userId = user._id || user.id;
+                const response = await api.get(`/users/${userId}`);
+                setUserProfile(response.data);
+            }
+        } catch (err) {
+            console.error("Failed to fetch user profile:", err);
+            setErrorMsg(err.response?.data?.message || "Failed to load user profile");
+        } finally {
+            setLoading(prev => ({ ...prev, userProfile: false }));
+        }
+    };
+
     const fetchLeaves = async () => {
         try {
             const response = await api.get("/leaves");
@@ -42,36 +62,77 @@ const LeaveSummary = () => {
     };
 
     useEffect(() => {
+        fetchUserProfile();
         fetchLeaves();
         fetchHolidays();
     }, []);
 
+    // Extract leave balances from user profile
+    const leaveBalances = userProfile?.leaves || {};
+    
+    // Calculate total leaves
+    const totalLeaves = Object.values(leaveBalances).reduce((sum, balance) => sum + (balance || 0), 0);
+
+    // Create leave data cards from the leaves object
     const leaveData = [
         {
-            icon: <HiOutlineUserRemove />,
-            label: "Absents",
-            available: user?.absentCount || 0,
-            badgeColor: "bg-red-400",
-        },
-        {
-            icon: <FaUmbrellaBeach />,
-            label: "Holidays",
-            available: user?.holidayCount || 0,
-            badgeColor: "bg-yellow-300",
-        },
-        {
-            icon: <FaUserFriends />,
-            label: "Personal",
-            available: user?.avalaibleLeaves || 0,
+            icon: <FaMoneyBillWave />,
+            label: "Paid Leave",
+            available: leaveBalances.paid || 0,
             badgeColor: "bg-green-500",
         },
         {
             icon: <FaHospital />,
             label: "Sick Leave",
-            available: user?.sickLeaveCount || 0,
+            available: leaveBalances.sick || 0,
             badgeColor: "bg-blue-500",
         },
+        {
+            icon: <MdEventAvailable />,
+            label: "Majlis Leave",
+            available: leaveBalances.majlis || 0,
+            badgeColor: "bg-purple-500",
+        },
+        {
+            icon: <FaUmbrellaBeach />,
+            label: "Casual Leave",
+            available: leaveBalances.casual || 0,
+            badgeColor: "bg-yellow-500",
+        },
+        {
+            icon: <FaClock />,
+            label: "Earned Leave",
+            available: leaveBalances.earned || 0,
+            badgeColor: "bg-indigo-500",
+        },
+        {
+            icon: <FaBaby />,
+            label: "Maternity Leave",
+            available: leaveBalances.maternity || 0,
+            badgeColor: "bg-pink-500",
+        },
+        {
+            icon: <FaUserTie />,
+            label: "Paternity Leave",
+            available: leaveBalances.paternity || 0,
+            badgeColor: "bg-cyan-500",
+        },
+        {
+            icon: <FaCalendarTimes />,
+            label: "Compensatory Leave",
+            available: leaveBalances.compensatory || 0,
+            badgeColor: "bg-orange-500",
+        },
+        {
+            icon: <HiOutlineUserRemove />,
+            label: "Unpaid Leave",
+            available: leaveBalances.unpaid || 0,
+            badgeColor: "bg-red-500",
+        },
     ];
+
+    // Filter out leave types with 0 balance (optional - you can show all if preferred)
+    const activeLeaveData = leaveData.filter(item => item.available > 0 || true); // Show all for now
 
     const formatAppliedLeaves = (data) => {
         return data.map(leave => ({
@@ -113,8 +174,16 @@ const LeaveSummary = () => {
             </div>
 
             {/* Leave Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                {leaveData.map((item, index) => (
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
+                {/* Total Leaves Card */}
+                <AttendanceCard
+                    icon={<MdEventAvailable />}
+                    title="Total Leaves"
+                    value={totalLeaves}
+                    badgeColor="bg-gradient-to-r from-teal-500 to-teal-600"
+                />
+                {/* Individual Leave Type Cards */}
+                {activeLeaveData.map((item, index) => (
                     <AttendanceCard
                         key={index}
                         icon={item.icon}
@@ -181,7 +250,15 @@ const LeaveSummary = () => {
                     </div>
                 )}
             </div>
-            <ApplyLeaveModal isOpen={isOpen} setIsOpen={setIsOpen} />
+            <ApplyLeaveModal 
+                isOpen={isOpen} 
+                setIsOpen={setIsOpen}
+                onLeaveAdded={() => {
+                    fetchLeaves();
+                    fetchUserProfile();
+                }}
+                userLeaves={leaveBalances}
+            />
 
         </div>
 

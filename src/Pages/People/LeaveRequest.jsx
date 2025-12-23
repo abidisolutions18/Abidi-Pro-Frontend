@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import {
   FaUmbrellaBeach,
   FaUserFriends,
@@ -11,8 +12,23 @@ import api from "../../axios";
 const LeaveRequest = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [leaveRecord, setLeaveRecord] = useState([]);
+  const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
+  const user = useSelector(state => state.auth.user);
+
+  // Fetch user profile to get leave balances
+  const fetchUserProfile = async () => {
+    try {
+      if (user?._id || user?.id) {
+        const userId = user._id || user.id;
+        const response = await api.get(`/users/${userId}`);
+        setUserProfile(response.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch user profile:", err);
+    }
+  };
 
   const fetchLeaves = async () => {
     try {
@@ -39,6 +55,7 @@ const LeaveRequest = () => {
   };
 
   useEffect(() => {
+    fetchUserProfile();
     fetchLeaves();
   }, []);
 
@@ -75,7 +92,15 @@ const LeaveRequest = () => {
       {/* roundercorner main Content */}
       <div>
         <div className='flex flex-col mt-3 bg-background px-6 py-1 rounded-md text-sm font-medium'>
-          <div className='px-2 my-4 text-lg'>Applied Leave</div>
+          <div className='flex justify-between items-center px-2 my-4'>
+            <div className='text-lg'>Applied Leave</div>
+            <button
+              onClick={() => setIsOpen(true)}
+              className="bg-[#76FA9E] h-8 px-4 rounded-lg text-xs font-semibold hover:bg-[#5dd87f] transition-colors"
+            >
+              Apply Leave
+            </button>
+          </div>
           {loading ? (
             <div className="text-white px-4">Loading...</div>
           ) : errorMsg ? (
@@ -130,7 +155,15 @@ const LeaveRequest = () => {
           )}
         </div>
       </div>
-      <ApplyLeaveModal isOpen={isOpen} setIsOpen={setIsOpen} />
+      <ApplyLeaveModal 
+        isOpen={isOpen} 
+        setIsOpen={setIsOpen}
+        onLeaveAdded={() => {
+          fetchLeaves();
+          fetchUserProfile();
+        }}
+        userLeaves={userProfile?.leaves || {}}
+      />
     </div>
   );
 };
