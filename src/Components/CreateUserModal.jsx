@@ -1,147 +1,313 @@
-import React, { useState, useRef } from "react";
-
+import React, { useState, useEffect } from "react";
+import api from "../axios"; // Ensure this path is correct
+import { toast } from "react-toastify";
+ 
 const CreateUserModal = ({ isOpen, setIsOpen }) => {
+  // Lists for Dropdowns
+  const [departments, setDepartments] = useState([]);
+  const [managers, setManagers] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+ 
   const [formData, setFormData] = useState({
-    employeeId: "",
+    empID: "",
     name: "",
     email: "",
+    password: "", // Required for creation
     designation: "",
-    department: "Software Development",
+    department: "", // Stores ObjectId
+    reportsTo: "",  // Stores ObjectId
+    role: "Employee",
+    empType: "Permanent",
     joiningDate: "",
-    role: "User",
-    employmentType: "Full Time",
-    location: "Karachi",
-    timezone: "Asia/Karachi",
+    phoneNumber: "",
+    branch: "Karachi",
+    timeZone: "Asia/Karachi"
   });
-  const modalRef = useRef(null);
-
-  if (!isOpen) return null;
-
-  const handleBackdropClick = (e) => {
-    if (modalRef.current && !modalRef.current.contains(e.target)) {
-      handleClose();
+ 
+  // Fetch Departments & Managers when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      const fetchData = async () => {
+        try {
+          // 1. Fetch Departments (Create this endpoint if not exists)
+          // const deptRes = await api.get("/departments");
+          // setDepartments(deptRes.data);
+         
+          // MOCK DATA (Remove this block when API is ready)
+          setDepartments([
+            { _id: "65d4b1...", name: "Software Development" },
+            { _id: "65d4b2...", name: "Human Resources" },
+            { _id: "65d4b3...", name: "Sales & Marketing" }
+          ]);
+ 
+          // 2. Fetch Users to populate "Reports To"
+          const usersRes = await api.get("/users");
+          setManagers(usersRes.data);
+        } catch (error) {
+          console.error("Failed to fetch form data", error);
+          toast.error("Could not load departments or managers.");
+        }
+      };
+      fetchData();
     }
-  };
-
-  const handleClose = () => {
-    setIsOpen(false);
-  };
-
+  }, [isOpen]);
+ 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-
+ 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+ 
+    try {
+      await api.post("/users", formData);
+      toast.success("User created successfully!");
+      setIsOpen(false);
+      // Reset form (optional)
+      setFormData({
+        empID: "", name: "", email: "", password: "", designation: "",
+        department: "", reportsTo: "", role: "Employee", empType: "Permanent",
+        joiningDate: "", phoneNumber: "", branch: "Karachi", timeZone: "Asia/Karachi"
+      });
+    } catch (error) {
+      const msg = error.response?.data?.message || "Failed to create user";
+      toast.error(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+ 
+  if (!isOpen) return null;
+ 
   return (
-    <div
-      className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex justify-center items-center p-4 sm:p-6"
-      onClick={handleBackdropClick}
-    >
-      <div
-        ref={modalRef}
-        className="w-full max-w-2xl bg-white rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl relative flex flex-col max-h-[90vh] animate-fadeIn overflow-hidden"
-      >
-        {/* CLOSE BUTTON */}
-        <button
-          onClick={handleClose}
-          className="absolute top-4 right-4 sm:top-5 sm:right-6 w-10 h-10 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-50 hover:text-red-500 transition-all text-2xl font-light z-10"
-        >
-          &times;
-        </button>
-
-        {/* HEADER */}
-        <div className="px-6 py-6 sm:px-10 sm:py-8 border-b border-slate-50 text-center flex-shrink-0">
-          <h2 className="text-base sm:text-lg font-black text-slate-800 tracking-widest uppercase">
-            CREATE NEW USER
-          </h2>
+    <div className="fixed inset-0 bg-black bg-opacity-30 z-[9999] flex justify-end">
+      <div className="w-full sm:w-[800px] bg-white h-full p-6 shadow-lg rounded-l-lg overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-semibold text-gray-800">Create New User</h2>
+          <button
+            className="text-gray-500 hover:text-red-500 text-2xl"
+            onClick={() => setIsOpen(false)}
+          >
+            &times;
+          </button>
         </div>
-
-        {/* FORM BODY */}
-        <form 
-          id="createUserForm"
-          className="p-6 sm:p-10 overflow-y-auto custom-scrollbar flex-1"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5 sm:gap-y-6">
-            {[
-              { label: "EMPLOYEE ID*", name: "employeeId", type: "text", placeholder: "e.g. emp-001" },
-              { label: "FULL NAME*", name: "name", type: "text", placeholder: "e.g. john doe" },
-              { label: "EMAIL ADDRESS*", name: "email", type: "email", placeholder: "name@company.com" },
-              { label: "DESIGNATION*", name: "designation", type: "text", placeholder: "e.g. ui developer" },
-            ].map((field) => (
-              <div key={field.name}>
-                <label className="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">
-                  {field.label}
-                </label>
-                <input
-                  type={field.type}
-                  name={field.name}
-                  value={formData[field.name]}
-                  onChange={handleChange}
-                  placeholder={field.placeholder}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 font-medium outline-none focus:ring-2 focus:ring-blue-100 transition-all placeholder:text-slate-300 placeholder:normal-case"
-                  required
-                />
-              </div>
-            ))}
-
+ 
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Row 1: ID, Name, Email */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">
-                JOINING DATE
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Employee ID <span className="text-red-500">*</span></label>
+              <input
+                type="text"
+                name="empID"
+                value={formData.empID}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
+                placeholder="e.g. EMP-001"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name <span className="text-red-500">*</span></label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
+                required
+              />
+            </div>
+          </div>
+ 
+          {/* Row 2: Password, Phone */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Password <span className="text-red-500">*</span></label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
+                placeholder="Min 6 characters"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number <span className="text-red-500">*</span></label>
+              <input
+                type="number"
+                name="phoneNumber"
+                value={formData.phoneNumber}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
+                required
+              />
+            </div>
+          </div>
+ 
+          <hr className="border-gray-200 my-4" />
+          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Employment Details</h3>
+ 
+          {/* Row 3: Role, Designation, Emp Type */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Role <span className="text-red-500">*</span></label>
+              <select
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
+              >
+                <option value="Employee">Employee</option>
+                <option value="Manager">Manager</option>
+                <option value="HR">HR</option>
+                <option value="Admin">Admin</option>
+                <option value="SuperAdmin">Super Admin</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Designation <span className="text-red-500">*</span></label>
+              <input
+                type="text"
+                name="designation"
+                value={formData.designation}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-md px-3 py-2"
+                placeholder="e.g. Software Engineer"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Type <span className="text-red-500">*</span></label>
+              <select
+                name="empType"
+                value={formData.empType}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
+              >
+                <option value="Permanent">Permanent</option>
+                <option value="Contractor">Contractor</option>
+                <option value="Intern">Intern</option>
+                <option value="Part Time">Part Time</option>
+              </select>
+            </div>
+          </div>
+ 
+          {/* Row 4: Department & Manager */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Department <span className="text-red-500">*</span></label>
+              <select
+                name="department"
+                value={formData.department}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
+                required
+              >
+                <option value="">Select Department</option>
+                {departments.map((dept) => (
+                  <option key={dept._id} value={dept._id}>
+                    {dept.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Reports To (Manager)</label>
+              <select
+                name="reportsTo"
+                value={formData.reportsTo}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
+              >
+                <option value="">No Manager (Top Level)</option>
+                {managers.map((mgr) => (
+                  <option key={mgr._id} value={mgr._id}>
+                    {mgr.name} ({mgr.designation})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+ 
+          {/* Row 5: Joining Date, Branch, Timezone */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Joining Date <span className="text-red-500">*</span></label>
               <input
                 type="date"
                 name="joiningDate"
                 value={formData.joiningDate}
                 onChange={handleChange}
-                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 font-medium outline-none focus:ring-2 focus:ring-blue-100 transition-all"
+                className="w-full border border-gray-300 rounded-md px-3 py-2"
+                required
               />
             </div>
-
             <div>
-              <label className="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">
-                USER ROLE
-              </label>
-              <div className="relative">
-                <select
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 font-medium outline-none appearance-none cursor-pointer focus:ring-2 focus:ring-blue-100 transition-all"
-                >
-                  <option value="User">USER</option>
-                  <option value="Admin">ADMIN</option>
-                  <option value="Manager">MANAGER</option>
-                </select>
-                <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-400">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Branch <span className="text-red-500">*</span></label>
+              <input
+                type="text"
+                name="branch"
+                value={formData.branch}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-md px-3 py-2"
+                required
+              />
+            </div>
+             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Timezone <span className="text-red-500">*</span></label>
+              <select
+                name="timeZone"
+                value={formData.timeZone}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
+              >
+                <option value="Asia/Karachi">Asia/Karachi</option>
+                <option value="America/New_York">America/New_York</option>
+                <option value="Europe/London">Europe/London</option>
+                <option value="Asia/Dubai">Asia/Dubai</option>
+              </select>
             </div>
           </div>
+ 
+          {/* Actions */}
+          <div className="flex justify-end gap-3 pt-6 border-t mt-6">
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-md transition"
+              disabled={isLoading}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-6 py-2 bg-primary text-white font-medium rounded-md hover:brightness-110 transition flex items-center"
+              disabled={isLoading}
+            >
+              {isLoading ? "Creating..." : "Create User"}
+            </button>
+          </div>
         </form>
-
-        {/* FOOTER ACTIONS */}
-        <div className="px-6 py-6 sm:px-10 sm:py-8 border-t border-slate-100 flex gap-3 sm:gap-4 bg-white flex-shrink-0">
-          <button
-            type="button"
-            onClick={handleClose}
-            className="flex-1 py-3 sm:py-4 font-black text-[10px] sm:text-[11px] text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
-          >
-            CANCEL
-          </button>
-          <button
-            type="submit"
-            form="createUserForm"
-            className="flex-1 py-3 sm:py-4 bg-[#64748b] text-white rounded-2xl font-black text-[10px] sm:text-[11px] uppercase tracking-widest shadow-lg shadow-slate-100 hover:brightness-110 active:scale-95 transition-all"
-          >
-            CREATE USER
-          </button>
-        </div>
       </div>
     </div>
   );
 };
-
+ 
 export default CreateUserModal;
+ 
