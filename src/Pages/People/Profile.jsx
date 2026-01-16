@@ -26,6 +26,7 @@ export default function Profile() {
           withCredentials: true,
         });
         setUser(res.data.user);
+        console.log(res.data.user);
       } catch (err) {
         console.error("Failed to load user profile", err);
       } finally {
@@ -63,7 +64,7 @@ export default function Profile() {
     {
       icon: Briefcase,
       label: "Department",
-      value: user.department || "N/A",
+      value: user.department.name || "N/A",
       bg: "bg-yellow-100",
       iconColor: "text-yellow-600",
     },
@@ -182,7 +183,7 @@ export default function Profile() {
         <div className="flex flex-col min-w-0">
           <p className="text-slate-800 font-bold text-sm uppercase tracking-wide">Reporting to</p>
           <p className="font-medium text-slate-600 text-sm break-words">
-            {user.reportsTo || "—"}
+            {user.reportsTo.name || "—"}
           </p>
         </div>
       </div>
