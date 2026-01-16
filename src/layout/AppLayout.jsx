@@ -1,18 +1,54 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Outlet, useLocation } from "react-router-dom";
+import { useDispatch } from "react-redux"; // Import useDispatch
+import { useMsal } from "@azure/msal-react"; // Import MSAL hook
+import { logout } from "../slices/authSlice"; // Import logout action (adjust path if needed)
+
 import NavBarVertical from "../Components/NavBarVertical";
 import SubNavbarVertical from "../Components/SubNavbarVertical";
-import RightSidebar from "../Components/RightSidebar"; // Import the new component
+import RightSidebar from "../Components/RightSidebar"; 
 import { 
   MagnifyingGlassIcon,
   BellIcon,
-  Cog6ToothIcon 
+  Cog6ToothIcon,
+  ArrowRightOnRectangleIcon // Icon for logout
 } from "@heroicons/react/24/solid";
 
 const AppLayout = () => {
   const [isRightBarOpen, setRightBarOpen] = useState(true);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false); // State for dropdown
+  const settingsRef = useRef(null); // Ref for clicking outside
+  
   const location = useLocation();
   const isPeoplePortal = location.pathname.startsWith("/people");
+  
+  // Auth Hooks
+  const dispatch = useDispatch();
+  const { instance } = useMsal();
+
+  // Handle clicking outside to close dropdown
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (settingsRef.current && !settingsRef.current.contains(event.target)) {
+        setIsSettingsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Logout Function
+  const handleLogout = () => {
+    // 1. Clear Redux State
+    dispatch(logout());
+    
+    // 2. Sign out of Azure and Redirect
+    instance.logoutRedirect({
+      postLogoutRedirectUri: window.location.origin,
+    }).catch(e => {
+      console.error("Logout error:", e);
+    });
+  };
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-[#CDD9EA] font-sans">
@@ -49,10 +85,33 @@ const AppLayout = () => {
             <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full ring-2 ring-white"></span>
           </button>
 
-          {/* Settings Icon */}
-          <button className="p-2 hover:bg-white/50 rounded-xl transition-colors">
-            <Cog6ToothIcon className="h-5 w-5 text-slate-600" />
-          </button>
+          {/* Settings Dropdown */}
+          <div className="relative" ref={settingsRef}>
+            <button 
+              onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+              className={`p-2 rounded-xl transition-colors ${isSettingsOpen ? 'bg-white shadow-sm' : 'hover:bg-white/50'}`}
+            >
+              <Cog6ToothIcon className="h-5 w-5 text-slate-600" />
+            </button>
+
+            {/* Dropdown Menu */}
+            {isSettingsOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 py-1 z-[70] origin-top-right transform transition-all">
+                <div className="px-4 py-2 border-b border-slate-100">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Settings</p>
+                </div>
+                
+                <button 
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                >
+                  <ArrowRightOnRectangleIcon className="h-4 w-4" />
+                  Sign out
+                </button>
+              </div>
+            )}
+          </div>
+
         </div>
       </header>
 
@@ -79,7 +138,7 @@ const AppLayout = () => {
           </div>
         </main>
 
-        {/* Right Sidebar for People Portal - Using the new component */}
+        {/* Right Sidebar for People Portal */}
         {isPeoplePortal && (
           <RightSidebar 
             isOpen={isRightBarOpen}

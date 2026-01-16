@@ -27,8 +27,10 @@ const RightSidebar = ({ isOpen, toggleSidebar }) => {
     // Get data from Redux store
     const { checkInn, checkOut, loading } = useSelector((state) => state.attendanceTimer);
     const { user } = useSelector((state) => state.auth);
-    const profileImage = user?.avatar || "";
-    const firstName = user?.firstName || "User";
+    const profileImage = user?.user?.avatar || "";
+    const firstName = user?.user?.name || "User";
+
+    console.log(user.user.name);
 
     useEffect(() => {
         dispatch(fetchCurrentStatus());
@@ -240,10 +242,10 @@ const RightSidebar = ({ isOpen, toggleSidebar }) => {
 
                     <div className="text-center bg-white rounded-xl px-4 py-2 w-full mb-2 shadow-sm border border-slate-100">
                         <h3 className="text-sm font-bold text-slate-800">
-                            {user?.name || "- Name -"}
+                            {user?.user?.name || "- Name -"}
                         </h3>
                         <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">
-                            {user?.designation || "- Designation -"}
+                            {user?.user?.designation || "- Designation -"}
                         </p>
                     </div>
 

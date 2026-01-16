@@ -28,9 +28,9 @@ const Home = () => {
   const userInfo = useSelector((state) => state.auth.user);
   const { checkInn } = useSelector((state) => state.attendanceTimer);
   
-  const profileImage = userInfo?.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e";
-  const firstName = userInfo?.name || "User";
-  const userId = userInfo?._id || userInfo?.id;
+  const profileImage = userInfo?.user.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e";
+  const firstName = userInfo?.user.name || "User";
+  const userId = userInfo?.user._id || userInfo?.user.id;
   
   const [loading, setLoading] = useState(true);
   const [elapsed, setElapsed] = useState(0);

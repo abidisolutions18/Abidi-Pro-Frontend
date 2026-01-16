@@ -9,8 +9,8 @@ import AuthLayout from "./layout/AuthLayout";
 // Pages
 import ThemeSelector from "./Pages/ThemeSelector";
 import Login from "./Pages/login/Login";
-import ForgotPass from "./Pages/login/ForgotPass";
-import ResetPassword from "./Pages/login/Resetpassword";
+// import ForgotPass from "./Pages/login/ForgotPass";
+// import ResetPassword from "./Pages/login/Resetpassword";
 import Home from "./Pages/People/Home";
 import TimeTracker from "./Pages/People/TimeTracker";
 import Files from "./Pages/People/Files";
@@ -30,19 +30,19 @@ import { ToastContainer } from "react-toastify";
 import PrivateRoute from "./Components/PrivateRoute";
 import PublicRoute from "./Components/PublicRoute";
 import "react-toastify/dist/ReactToastify.css";
-import VerifyOtp from "./Pages/login/VerifyOtp";
+// import VerifyOtp from "./Pages/login/VerifyOtp";
 import Ticket from "./Pages/Tickets/Ticket";
 import AdminTickets from "./Pages/Tickets/AdminTickets";
 import AdminDashBoard from "./Pages/Admin/AdminDashBoard";
 import ActivityLogs from "./Pages/Admin/ActivityLogs";
 import MyTask from "./Pages/Projects/MyTask";
-import useAutoLogin from "./Hooks/useAutoLogin";
+// import useAutoLogin from "./Hooks/useAutoLogin";
 import { TimeLogProvider } from "../src/Pages/People/TimeLogContext";
 import Role from "./Pages/People/sharedWithRole";
 import UploadDocument from "./Pages/People/UploadDocument";
 import FAQs from "./Pages/People/FAQ";
 // import RequestHR from "./Pages/People/
-import useTokenRefresh from "./Hooks/useTokenRefresh";
+// import useTokenRefresh from "./Hooks/useTokenRefresh";
 import AssignTicket from "./Pages/Tickets/AssignTickets";
 import ProjectDetail from "./Pages/Projects/ProjectDetail";
 
@@ -76,9 +76,9 @@ function App() {
           }
         >
           <Route index path="login" element={<Login />} />
-          <Route path="forgot-password" element={<ForgotPass />} />
+          {/* <Route path="forgot-password" element={<ForgotPass />} />
           <Route path="reset-password/:token" element={<ResetPassword />} />
-          <Route path="verify-otp" element={<VerifyOtp />} />
+          <Route path="verify-otp" element={<VerifyOtp />} /> */}
         </Route>
 
         {/* Theme Selector */}
