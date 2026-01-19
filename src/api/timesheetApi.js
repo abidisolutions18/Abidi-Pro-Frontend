@@ -9,15 +9,13 @@ const getEmployeeTimesheets = async (month, year) => {
   return response.data;
 };
 
+// --- FIX IS HERE ---
 const createTimesheet = async (timesheetData) => {
-  const config = {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  };
-  const response = await api.post(API_URL, timesheetData, config);
+  // REMOVED manual header configuration
+  const response = await api.post(API_URL, timesheetData);
   return response.data;
 };
+// -------------------
 
 const getTimesheetById = async (id) => {
   const response = await api.get(`${API_URL}/${id}`);
@@ -32,6 +30,7 @@ const getAllTimesheets = async (month, year) => {
 };
 
 const updateTimesheetStatus = async (id, updateData) => {
+  // If you are sending files here too, remove headers as well
   const response = await api.put(`${API_URL}/${id}/status`, updateData);
   return response.data;
 };

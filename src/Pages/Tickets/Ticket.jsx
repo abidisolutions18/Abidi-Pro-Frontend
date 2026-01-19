@@ -25,7 +25,7 @@ const Ticket = () => {
   useEffect(() => {
     const fetchTickets = async () => {
       try {
-        if (!user?.email) return;
+        if (!user?.user?.email) return;
         const res = await api.get(`/tickets`);
         setTickets(res.data || []);
       } catch (error) {
