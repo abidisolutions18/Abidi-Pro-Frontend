@@ -46,6 +46,7 @@ import FAQs from "./Pages/People/FAQ";
 import AssignTicket from "./Pages/Tickets/AssignTickets";
 import ProjectDetail from "./Pages/Projects/ProjectDetail";
 import ComingSoon from "./Pages/Projects/ComingSoon";
+import OrgChartPage from "./Pages/Admin/OrgChart";
 
 
 function App() {
@@ -161,6 +162,7 @@ function App() {
           <Route path="approve" element={<ApproveTimesheets />} />
           <Route path="assign-ticket" element={<AdminTickets />} />
           <Route path="assign-ticket/:ticketId" element={<AssignTicket />} />
+          <Route path="org-chart" element={<OrgChartPage />} />
         </Route>
       </Routes>
     </>

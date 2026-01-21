@@ -10,7 +10,6 @@ const CreateUserModal = ({ isOpen, setIsOpen, onUserCreated, allDepartments, all
   const modalRef = useRef(null);
 
   const initialFormState = {
-    empID: "",
     name: "",
     email: "",
     password: "",
@@ -87,20 +86,6 @@ const CreateUserModal = ({ isOpen, setIsOpen, onUserCreated, allDepartments, all
           >
             {/* ... (Existing Form Inputs - No Changes needed here) ... */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">
-                  Employee ID <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="empID"
-                  value={formData.empID}
-                  onChange={handleChange}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 font-medium outline-none focus:ring-2 focus:ring-blue-100 placeholder:text-slate-300"
-                  placeholder="e.g. EMP-001"
-                  required
-                />
-              </div>
               <div>
                 <label className="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">
                   Full Name <span className="text-red-500">*</span>

@@ -100,11 +100,13 @@ const TimeTracker = () => {
     }
   }, [activeTab]);
 
-  const handleTimesheetCreated = async () => {
-    await fetchTimesheets();
-    toast.success("Timesheet created successfully!");
-    setIsCreateTimesheetModalOpen(false);
-  };
+const handleTimesheetCreated = async () => {
+  
+  if (activeTab === 1) {
+  await fetchTimesheets();
+  }
+  setIsCreateTimesheetModalOpen(false);
+};
 
 
   // Helper to safely parse backend date without timezone shift

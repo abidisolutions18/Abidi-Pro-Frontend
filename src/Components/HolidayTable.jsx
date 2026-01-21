@@ -1,25 +1,35 @@
 import { useEffect, useState } from 'react';
 import holidayApi from '../api/holidayApi';
 
-const HolidayTable = ({ searchTerm = "" }) => {
-  const [holidays, setHolidays] = useState([]);
-  const [loading, setLoading] = useState(true);
+const HolidayTable = ({ holidays: propHolidays, searchTerm = "", refreshKey = 0 }) => {
+  const [holidays, setHolidays] = useState(propHolidays || []);
+  const [loading, setLoading] = useState(!propHolidays);
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
-    const fetchHolidays = async () => {
-      try {
-        const data = await holidayApi.getAllHolidays();
-        setHolidays(data);
-      } catch (error) {
-        console.error("Error fetching holidays:", error);
-        setErrorMsg("Failed to load holidays");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchHolidays();
-  }, []);
+    // If holidays are passed as prop, use them
+    if (propHolidays) {
+      setHolidays(propHolidays);
+      setLoading(false);
+    } else {
+      // Otherwise fetch from API
+      fetchHolidays();
+    }
+  }, [propHolidays, refreshKey]);
+
+  const fetchHolidays = async () => {
+    try {
+      setLoading(true);
+      const data = await holidayApi.getAllHolidays();
+      setHolidays(data);
+      setErrorMsg("");
+    } catch (error) {
+      console.error("Error fetching holidays:", error);
+      setErrorMsg("Failed to load holidays");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -47,7 +57,7 @@ const HolidayTable = ({ searchTerm = "" }) => {
     .filter(h => new Date(h.date) < today)
     .filter(isMatch)
     .sort((a, b) => new Date(b.date) - new Date(a.date))
-    .slice(0, 5); // Show only 5 most recent past holidays
+    .slice(0, 5);
 
   const renderTable = (title, data, isUpcoming = true) => {
     if (data.length === 0) {

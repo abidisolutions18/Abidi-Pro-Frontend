@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from "react";
 import api from "../../axios";
-import StatusDropDown from "../../Components/StatusDropDown";
-import { FaPlus } from "react-icons/fa";
+import { FaPlus, FaEye } from "react-icons/fa";
 import HolidayTable from "../../Components/HolidayTable";
 import AddHolidayModal from "../../Components/AddHolidayModal";
-import Toast from "../../Components/Toast"; // Added Toast import
+import Toast from "../../Components/Toast";
+import ViewLeaveModal from "../../Components/ViewLeaveModal"; // Import the new modal
 
 const LeaveTrackerAdmin = () => {
   const [departmentLeaveRecord, setDepartmentLeaveRecord] = useState([]);
   const [holidays, setHolidays] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [toast, setToast] = useState(null); // Added toast state
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedLeave, setSelectedLeave] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0); // Add refresh key for holidays
 
   const [loading, setLoading] = useState({
     leaves: true,
@@ -65,7 +68,17 @@ const LeaveTrackerAdmin = () => {
     try {
       await api.put(`/leaves/${leaveId}/status`, { status: newStatus });
       showToast(`Leave status updated to ${newStatus}`);
-      await fetchLeaves();
+      
+      // Update local state immediately for better UX
+      setDepartmentLeaveRecord(prev => 
+        prev.map(leave => 
+          leave.id === leaveId 
+            ? { ...leave, status: newStatus }
+            : leave
+        )
+      );
+      
+      await fetchLeaves(); // Refresh from server
     } catch (error) {
       console.error(
         "Failed to update status:",
@@ -77,14 +90,29 @@ const LeaveTrackerAdmin = () => {
 
   const handleHolidayAdded = () => {
     showToast("Holiday added successfully");
-    fetchHolidays();
+    fetchHolidays(); // Refresh holidays table
+    setRefreshKey(prev => prev + 1); // Force refresh HolidayTable component
     setIsOpen(false);
+  };
+
+  const handleViewLeave = (leave) => {
+    setSelectedLeave(leave);
+    setViewModalOpen(true);
   };
 
   useEffect(() => {
     fetchLeaves();
     fetchHolidays();
   }, []);
+
+  // Get status color class
+  const getStatusColor = (status) => {
+    switch(status) {
+      case "Approved": return "bg-green-100 text-green-800";
+      case "Rejected": return "bg-red-100 text-red-800";
+      default: return "bg-yellow-100 text-yellow-800";
+    }
+  };
 
   return (
     <div className="min-h-screen bg-transparent p-2">
@@ -94,6 +122,16 @@ const LeaveTrackerAdmin = () => {
           message={toast.message} 
           type={toast.type} 
           onClose={() => setToast(null)} 
+        />
+      )}
+
+      {/* View Leave Modal */}
+      {selectedLeave && (
+        <ViewLeaveModal
+          isOpen={viewModalOpen}
+          setIsOpen={setViewModalOpen}
+          leaveData={selectedLeave}
+          onStatusChange={handleStatusChange}
         />
       )}
 
@@ -120,6 +158,7 @@ const LeaveTrackerAdmin = () => {
                     "Reason",
                     "Duration",
                     "Status",
+                    "Actions",
                   ].map((heading) => (
                     <th
                       key={heading}
@@ -134,7 +173,7 @@ const LeaveTrackerAdmin = () => {
                 {loading.leaves ? (
                   [...Array(5)].map((_, index) => (
                     <tr key={index} className="border-b border-slate-100">
-                      {[...Array(8)].map((__, colIndex) => (
+                      {[...Array(9)].map((__, colIndex) => (
                         <td key={colIndex} className="p-3">
                           <div className="h-4 bg-slate-100 rounded animate-pulse"></div>
                         </td>
@@ -145,7 +184,7 @@ const LeaveTrackerAdmin = () => {
                   departmentLeaveRecord.map((task, index) => (
                     <tr key={index} className="border-b border-slate-100 hover:bg-slate-50/80 transition-colors">
                       <td className="p-3 text-slate-700">{task.date}</td>
-                      <td className="p-3 text-slate-700 font-mono text-xs">{task.id}</td>
+                      <td className="p-3 text-slate-700 font-mono text-xs">{task.id.substring(0, 8)}...</td>
                       <td className="p-3 text-slate-700 font-medium">{task.name}</td>
                       <td className="p-3 text-slate-600">{task.email}</td>
                       <td className="p-3 text-slate-700">
@@ -156,26 +195,24 @@ const LeaveTrackerAdmin = () => {
                       <td className="p-3 text-slate-600 max-w-xs truncate">{task.reason}</td>
                       <td className="p-3 text-slate-700 font-medium">{task.duration}</td>
                       <td className="p-3">
-                        <StatusDropDown
-                          status={task.status}
-                          onChange={(newStatus) => {
-                            // Optimistic UI update
-                            setDepartmentLeaveRecord((records) =>
-                              records.map((row, i) =>
-                                i === index
-                                  ? { ...row, status: newStatus }
-                                  : row
-                              )
-                            );
-                            handleStatusChange(task.id, newStatus);
-                          }}
-                        />
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${getStatusColor(task.status)}`}>
+                          {task.status}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        <button
+                          onClick={() => handleViewLeave(task)}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-200 transition-colors"
+                        >
+                          <FaEye size={12} />
+                          View
+                        </button>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={8} className="p-8 text-center text-slate-500 text-sm">
+                    <td colSpan={9} className="p-8 text-center text-slate-500 text-sm">
                       <div className="flex flex-col items-center gap-2">
                         <svg className="w-12 h-12 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -213,7 +250,7 @@ const LeaveTrackerAdmin = () => {
               <p className="mt-2 text-slate-600 text-xs font-medium uppercase tracking-wide">Loading holidays...</p>
             </div>
           ) : (
-            <HolidayTable holidays={holidays} />
+            <HolidayTable holidays={holidays} key={refreshKey} />
           )}
         </div>
       </div>

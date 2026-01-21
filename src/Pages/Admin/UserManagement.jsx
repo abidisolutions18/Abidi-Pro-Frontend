@@ -95,10 +95,20 @@ const UserManagement = () => {
     showToast('User created successfully');
   };
 
-  const handleUserUpdated = () => {
+  const handleUserUpdated = (type = 'update') => {
     fetchData();
-    showToast('User updated successfully');
+    if (type === 'delete') {
+      showToast('User deleted successfully');
+    } else {
+      showToast('User updated successfully');
+    }
   };
+
+  const handleUserDeleted = () => {
+    fetchData();
+    showToast('User deleted successfully');
+  };
+
 
   const activeUsers = users.filter(u => u.empStatus === "Active").length;
   const inactiveUsers = users.filter(u => u.empStatus === "Inactive").length;
@@ -177,11 +187,10 @@ const UserManagement = () => {
               <button
                 key={key}
                 onClick={() => handleSort(key)}
-                className={`px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
-                  sortConfig.key === key
+                className={`px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${sortConfig.key === key
                     ? 'bg-blue-100 text-blue-700'
                     : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
-                }`}
+                  }`}
               >
                 {key === 'empStatus' ? 'Status' : key}
                 {sortConfig.key === key && (
@@ -241,29 +250,26 @@ const UserManagement = () => {
                       </td>
                       <td className="p-4">
                         <span
-                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${
-                            user.role === "Admin"
+                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${user.role === "Admin"
                               ? "bg-purple-50 text-purple-600 border-purple-100"
                               : "bg-blue-50 text-blue-600 border-blue-100"
-                          }`}
+                            }`}
                         >
                           {user.role}
                         </span>
                       </td>
                       <td className="p-4">
                         <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${
-                            user.empStatus === "Active"
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${user.empStatus === "Active"
                               ? "bg-emerald-50 text-emerald-600 border-emerald-100"
                               : "bg-rose-50 text-rose-600 border-rose-100"
-                          }`}
+                            }`}
                         >
                           <span
-                            className={`w-1.5 h-1.5 rounded-full ${
-                              user.empStatus === "Active"
+                            className={`w-1.5 h-1.5 rounded-full ${user.empStatus === "Active"
                                 ? "bg-emerald-500"
                                 : "bg-rose-500"
-                            }`}
+                              }`}
                           ></span>
                           {user.empStatus}
                         </span>

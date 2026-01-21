@@ -1,12 +1,16 @@
 import React, { useState, useRef, useEffect } from "react";
 import api from "../axios";
-import { FaEdit } from "react-icons/fa";
+import { FaEdit, FaPlus, FaTrash } from "react-icons/fa";
+import { toast } from "react-toastify";
+import CreateDepartmentModal from "./CreateDepartmentModal";
 
 const UserDetailModal = ({ user, isOpen, onClose, onUserUpdated, allManagers, allDepartments }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [errors, setErrors] = useState({});
+  const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
   const modalRef = useRef(null);
 
   useEffect(() => {
@@ -109,6 +113,25 @@ const UserDetailModal = ({ user, isOpen, onClose, onUserUpdated, allManagers, al
     }
   };
 
+  const handleDeleteUser = async () => {
+    if (!window.confirm(`Are you sure you want to delete ${user.name}? This action cannot be undone.`)) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await api.delete(`/users/${user._id}`);
+      toast.success("User deleted successfully");
+      onUserUpdated();
+      onClose();
+    } catch (error) {
+      console.error("Failed to delete user:", error);
+      toast.error(error.response?.data?.message || "Failed to delete user");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleBackdropClick = (e) => {
     if (modalRef.current && !modalRef.current.contains(e.target)) {
       onClose();
@@ -127,20 +150,32 @@ const UserDetailModal = ({ user, isOpen, onClose, onUserUpdated, allManagers, al
         {isEditing ? (
           <>
             {type === "select" ? (
-              <select
-                name={name}
-                value={value}
-                onChange={handleChange}
-                className={`w-full bg-white border ${error ? "border-red-300" : "border-slate-200"} rounded-xl px-4 py-3 text-sm text-slate-700 font-medium outline-none focus:ring-2 focus:ring-blue-100 cursor-pointer`}
-                required={isRequired}
-              >
-                <option value="">SELECT {label.toUpperCase()}</option>
-                {options.map((option) => (
-                  <option key={option.value || option._id} value={option.value || option._id}>
-                    {option.label || option.name.toUpperCase()}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  name={name}
+                  value={value}
+                  onChange={handleChange}
+                  className={`w-full bg-white border ${error ? "border-red-300" : "border-slate-200"} rounded-xl px-4 py-3 text-sm text-slate-700 font-medium outline-none focus:ring-2 focus:ring-blue-100 cursor-pointer appearance-none pr-10`}
+                  required={isRequired}
+                >
+                  <option value="">SELECT {label.toUpperCase()}</option>
+                  {options.map((option) => (
+                    <option key={option.value || option._id} value={option.value || option._id}>
+                      {option.label || option.name.toUpperCase()}
+                    </option>
+                  ))}
+                </select>
+                {name === "department" && (
+                  <button
+                    type="button"
+                    onClick={() => setIsDeptModalOpen(true)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                    title="Add Department"
+                  >
+                    <FaPlus className="text-xs" />
+                  </button>
+                )}
+              </div>
             ) : type === "date" ? (
               <input
                 type="date"
@@ -213,201 +248,223 @@ const UserDetailModal = ({ user, isOpen, onClose, onUserUpdated, allManagers, al
   if (!isOpen || !user) return null;
 
   return (
-    <div
-      className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[9999] flex justify-center items-center p-4"
-      onClick={handleBackdropClick}
-    >
+    <>
       <div
-        ref={modalRef}
-        className="w-full max-w-4xl bg-white rounded-[1.5rem] shadow-2xl relative flex flex-col max-h-[90vh] animate-fadeIn overflow-hidden"
+        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[9999] flex justify-center items-center p-4"
+        onClick={handleBackdropClick}
       >
-        {/* Header */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-t-[1.2rem] border-b border-white/50 p-4 sm:p-6">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              {user.avatar ? (
-                <img
-                  src={user.avatar}
-                  alt={user.name}
-                  className="h-12 w-12 rounded-full object-cover border-2 border-white shadow-md"
-                />
-              ) : (
-                <div className="h-12 w-12 rounded-full bg-[#E0E5EA] text-slate-700 flex items-center justify-center text-lg font-bold border-2 border-white shadow-md">
-                  {user.name?.charAt(0).toUpperCase()}
-                </div>
-              )}
-              <div>
-                <h2 className="text-base font-bold text-slate-800 uppercase tracking-tight">
-                  {user.name}
-                </h2>
-                <p className="text-slate-500 text-xs font-medium uppercase tracking-wide">
-                  {user.designation} • {user.empID}
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setIsEditing(!isEditing)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors text-xs font-bold uppercase"
-              >
-                <FaEdit size={14} />
-                {isEditing ? "Cancel" : "Edit"}
-              </button>
-              <button
-                onClick={() => {
-                  onClose();
-                  setIsEditing(false);
-                }}
-                className="w-10 h-10 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-50 hover:text-red-500 transition-all text-2xl font-light"
-              >
-                &times;
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Content */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6">
-          <div className="space-y-6">
-            {/* Personal Information */}
-            <div className="bg-slate-50/50 rounded-xl p-4">
-              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">
-                Personal Information
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {renderField("Employee ID", "empID", formData.empID)}
-                {renderField("Full Name", "name", formData.name)}
-                {renderField("Email", "email", formData.email, "email")}
-                {renderField("Phone Number", "phoneNumber", formData.phoneNumber, "tel")}
-              </div>
-            </div>
-
-            {/* Employment Details */}
-            <div className="bg-slate-50/50 rounded-xl p-4">
-              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">
-                Employment Details
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {renderField("Status", "empStatus", formData.empStatus, "select", [
-                  { value: "Active", label: "ACTIVE" },
-                  { value: "Inactive", label: "INACTIVE" }
-                ])}
-                {renderField("Role", "role", formData.role, "select", [
-                  { value: "Employee", label: "EMPLOYEE" },
-                  { value: "Manager", label: "MANAGER" },
-                  { value: "HR", label: "HR" },
-                  { value: "Admin", label: "ADMIN" },
-                  { value: "SuperAdmin", label: "SUPER ADMIN" }
-                ])}
-                {renderField("Designation", "designation", formData.designation)}
-                {renderField("Type", "empType", formData.empType, "select", [
-                  { value: "Permanent", label: "PERMANENT" },
-                  { value: "Contractor", label: "CONTRACTOR" },
-                  { value: "Intern", label: "INTERN" },
-                  { value: "Part Time", label: "PART TIME" }
-                ])}
-                {renderField("Department", "department", formData.department, "select", allDepartments)}
-                {renderField("Reports To", "reportsTo", formData.reportsTo, "select", [
-                  { value: "", label: "NO MANAGER" },
-                  ...allManagers.map(mgr => ({ value: mgr._id, label: mgr.name.toUpperCase() }))
-                ], false)}
-              </div>
-            </div>
-
-            {/* Company Information */}
-            <div className="bg-slate-50/50 rounded-xl p-4">
-              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">
-                Company Information
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {renderField("Joining Date", "joiningDate", formData.joiningDate, "date")}
-                {renderField("Branch", "branch", formData.branch)}
-                {renderField("Timezone", "timeZone", formData.timeZone, "select", [
-                  { value: "Asia/Karachi", label: "ASIA/KARACHI" },
-                  { value: "America/New_York", label: "AMERICA/NEW_YORK" },
-                  { value: "Europe/London", label: "EUROPE/LONDON" },
-                  { value: "Asia/Dubai", label: "ASIA/DUBAI" }
-                ])}
-              </div>
-            </div>
-
-            {/* Summary Card */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm border border-white/50 p-4">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="text-center">
-                  <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">Status</div>
-                  <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border mt-1 ${
-                    user.empStatus === "Active"
-                      ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                      : "bg-rose-50 text-rose-600 border-rose-100"
-                  }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${
-                      user.empStatus === "Active" ? "bg-emerald-500" : "bg-rose-500"
-                    }`}></span>
-                    {user.empStatus}
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">Role</div>
-                  <div className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold border mt-1 ${
-                    user.role === "Admin"
-                      ? "bg-purple-50 text-purple-600 border-purple-100"
-                      : "bg-blue-50 text-blue-600 border-blue-100"
-                  }`}>
-                    {user.role}
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">Type</div>
-                  <div className="text-sm font-medium text-slate-700 mt-1">{user.empType}</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">Joined</div>
-                  <div className="text-sm font-medium text-slate-700 mt-1">
-                    {new Date(user.joiningDate).toLocaleDateString("en-US", {
-                      month: "short",
-                      year: "numeric"
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </form>
-
-        {/* Footer with Save Button (only when editing) */}
-        {isEditing && (
-          <div className="bg-white/90 backdrop-blur-sm border-t border-white/50 p-4">
-            <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setIsEditing(false)}
-                disabled={isLoading}
-                className="px-6 py-3 font-black text-[11px] text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isLoading}
-                onClick={handleSubmit}
-                className="px-6 py-3 bg-[#64748b] text-white rounded-xl font-black text-[11px] uppercase tracking-widest shadow-lg hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
-              >
-                {isLoading ? (
-                  <span className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Saving...
-                  </span>
+        <div
+          ref={modalRef}
+          className="w-full max-w-4xl bg-white rounded-[1.5rem] shadow-2xl relative flex flex-col max-h-[90vh] animate-fadeIn overflow-hidden"
+        >
+          {/* Header */}
+          <div className="bg-white/90 backdrop-blur-sm rounded-t-[1.2rem] border-b border-white/50 p-4 sm:p-6">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                {user.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt={user.name}
+                    className="h-12 w-12 rounded-full object-cover border-2 border-white shadow-md"
+                  />
                 ) : (
-                  "Save Changes"
+                  <div className="h-12 w-12 rounded-full bg-[#E0E5EA] text-slate-700 flex items-center justify-center text-lg font-bold border-2 border-white shadow-md">
+                    {user.name?.charAt(0).toUpperCase()}
+                  </div>
                 )}
-              </button>
+                <div>
+                  <h2 className="text-base font-bold text-slate-800 uppercase tracking-tight">
+                    {user.name}
+                  </h2>
+                  <p className="text-slate-500 text-xs font-medium uppercase tracking-wide">
+                    {user.designation} • {user.empID}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                {!isEditing && (
+                  <button
+                    onClick={handleDeleteUser}
+                    disabled={isDeleting}
+                    className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors text-xs font-bold uppercase disabled:opacity-50"
+                  >
+                    <FaTrash size={14} />
+                    {isDeleting ? "Deleting..." : "Delete"}
+                  </button>
+                )}
+                <button
+                  onClick={() => setIsEditing(!isEditing)}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors text-xs font-bold uppercase"
+                >
+                  <FaEdit size={14} />
+                  {isEditing ? "Cancel" : "Edit"}
+                </button>
+                <button
+                  onClick={() => {
+                    onClose();
+                    setIsEditing(false);
+                  }}
+                  className="w-10 h-10 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-50 hover:text-red-500 transition-all text-2xl font-light"
+                >
+                  &times;
+                </button>
+              </div>
             </div>
           </div>
-        )}
+
+          {/* Content */}
+          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6">
+            <div className="space-y-6">
+              {/* Personal Information */}
+              <div className="bg-slate-50/50 rounded-xl p-4">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">
+                  Personal Information
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {renderField("Employee ID", "empID", formData.empID)}
+                  {renderField("Full Name", "name", formData.name)}
+                  {renderField("Email", "email", formData.email, "email")}
+                  {renderField("Phone Number", "phoneNumber", formData.phoneNumber, "tel")}
+                </div>
+              </div>
+
+              {/* Employment Details */}
+              <div className="bg-slate-50/50 rounded-xl p-4">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">
+                  Employment Details
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {renderField("Status", "empStatus", formData.empStatus, "select", [
+                    { value: "Active", label: "ACTIVE" },
+                    { value: "Inactive", label: "INACTIVE" }
+                  ])}
+                  {renderField("Role", "role", formData.role, "select", [
+                    { value: "Employee", label: "EMPLOYEE" },
+                    { value: "Manager", label: "MANAGER" },
+                    { value: "HR", label: "HR" },
+                    { value: "Admin", label: "ADMIN" },
+                    { value: "SuperAdmin", label: "SUPER ADMIN" }
+                  ])}
+                  {renderField("Designation", "designation", formData.designation)}
+                  {renderField("Type", "empType", formData.empType, "select", [
+                    { value: "Permanent", label: "PERMANENT" },
+                    { value: "Contractor", label: "CONTRACTOR" },
+                    { value: "Intern", label: "INTERN" },
+                    { value: "Part Time", label: "PART TIME" }
+                  ])}
+                  {renderField("Department", "department", formData.department, "select", allDepartments)}
+                  {renderField("Reports To", "reportsTo", formData.reportsTo, "select", [
+                    { value: "", label: "NO MANAGER" },
+                    ...allManagers.map(mgr => ({ value: mgr._id, label: mgr.name.toUpperCase() }))
+                  ], false)}
+                </div>
+              </div>
+
+              {/* Company Information */}
+              <div className="bg-slate-50/50 rounded-xl p-4">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">
+                  Company Information
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {renderField("Joining Date", "joiningDate", formData.joiningDate, "date")}
+                  {renderField("Branch", "branch", formData.branch)}
+                  {renderField("Timezone", "timeZone", formData.timeZone, "select", [
+                    { value: "Asia/Karachi", label: "ASIA/KARACHI" },
+                    { value: "America/New_York", label: "AMERICA/NEW_YORK" },
+                    { value: "Europe/London", label: "EUROPE/LONDON" },
+                    { value: "Asia/Dubai", label: "ASIA/DUBAI" }
+                  ])}
+                </div>
+              </div>
+
+              {/* Summary Card */}
+              <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm border border-white/50 p-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="text-center">
+                    <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">Status</div>
+                    <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border mt-1 ${
+                      user.empStatus === "Active"
+                        ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                        : "bg-rose-50 text-rose-600 border-rose-100"
+                    }`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${
+                        user.empStatus === "Active" ? "bg-emerald-500" : "bg-rose-500"
+                      }`}></span>
+                      {user.empStatus}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">Role</div>
+                    <div className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold border mt-1 ${
+                      user.role === "Admin"
+                        ? "bg-purple-50 text-purple-600 border-purple-100"
+                        : "bg-blue-50 text-blue-600 border-blue-100"
+                    }`}>
+                      {user.role}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">Type</div>
+                    <div className="text-sm font-medium text-slate-700 mt-1">{user.empType}</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">Joined</div>
+                    <div className="text-sm font-medium text-slate-700 mt-1">
+                      {new Date(user.joiningDate).toLocaleDateString("en-US", {
+                        month: "short",
+                        year: "numeric"
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+
+          {/* Footer with Save Button (only when editing) */}
+          {isEditing && (
+            <div className="bg-white/90 backdrop-blur-sm border-t border-white/50 p-4">
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  disabled={isLoading}
+                  className="px-6 py-3 font-black text-[11px] text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  onClick={handleSubmit}
+                  className="px-6 py-3 bg-[#64748b] text-white rounded-xl font-black text-[11px] uppercase tracking-widest shadow-lg hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
+                >
+                  {isLoading ? (
+                    <span className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Saving...
+                    </span>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+
+      <CreateDepartmentModal
+        isOpen={isDeptModalOpen}
+        onClose={() => setIsDeptModalOpen(false)}
+        onDepartmentCreated={() => {
+          // Refresh departments list
+          onUserUpdated();
+        }}
+        potentialManagers={allManagers}
+      />
+    </>
   );
 };
 

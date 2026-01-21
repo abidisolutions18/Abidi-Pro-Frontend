@@ -68,11 +68,12 @@ export const moduleConfigs = {
       { name: "Admin DashBoard", path: "/admin/adminDashboard" },
       { name: "Leave Management", path: "/admin/leaveTrackerAdmin" },
       { name: "User Management", path: "/admin/userManagement" },
-      { name: "File Management", path: "/admin/upload" },
+      // { name: "File Management", path: "/admin/upload" },
       // { name: "Activity Logs", path: "/admin/logs" },
       { name: "Approve Time Sheets", path: "/admin/approve" },
 
       { name: "Assign Ticket", path: "/admin/assign-ticket" },
+      { name: "Organization Chart", path: "/admin/org-chart" },
     ],
   },
 

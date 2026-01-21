@@ -67,15 +67,15 @@ export default function CreateTimesheetModal({ open, onClose, onTimesheetCreated
     if (modalRef.current && !modalRef.current.contains(e.target)) onClose();
   };
 
-  const isValid = timesheetName.trim().length >= 3 && 
-                  description.trim().length >= 5 && 
-                  logs.length > 0 &&
-                  selectedDate;
+  const isValid = timesheetName.trim().length >= 3 &&
+    description.trim().length >= 5 &&
+    logs.length > 0 &&
+    selectedDate;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isValid) return;
-    
+
     // Frontend validation: Check if timesheet already exists for this date
     try {
       // Get existing timesheets for this week to check
@@ -83,26 +83,26 @@ export default function CreateTimesheetModal({ open, onClose, onTimesheetCreated
       const monday = new Date(today);
       monday.setDate(today.getDate() - today.getDay() + 1);
       monday.setHours(0, 0, 0, 0);
-      
+
       const response = await timesheetApi.getWeeklyTimesheets(
         monday.toISOString().split('T')[0]
       );
-      
+
       // Check if a timesheet already exists for this exact date
       const existingForDate = response.timesheets.find(ts => {
         const tsDate = new Date(ts.date);
         const selectedDateObj = new Date(selectedDate);
         return tsDate.toDateString() === selectedDateObj.toDateString();
       });
-      
+
       if (existingForDate) {
         toast.error(`You already have a timesheet for ${formatDisplayDate(selectedDate)}`);
         return;
       }
-      
+
       // Calculate total hours for this timesheet
       const logsHours = logs.reduce((total, log) => total + log.hours, 0);
-      
+
       // Check weekly limit
       if (response.weeklyTotal + logsHours > 40) {
         toast.error(`Weekly limit (40 hours) would be exceeded. You have ${response.weeklyTotal} hours already.`);
@@ -112,20 +112,21 @@ export default function CreateTimesheetModal({ open, onClose, onTimesheetCreated
       console.error("Validation error:", error);
       // Continue anyway - backend will do final validation
     }
-    
+
     setLoading(true);
     try {
       const formData = new FormData();
       formData.append('name', timesheetName);
       formData.append('description', description);
       formData.append('date', selectedDate); // Send the specific date
-      
+
       if (attachment) formData.append('attachments', attachment);
       logs.forEach(log => formData.append('timeLogs', log._id));
 
       await timesheetApi.createTimesheet(formData);
-      toast.success("Timesheet created successfully!");
-      onTimesheetCreated();
+      if (onTimesheetCreated) {
+        onTimesheetCreated();
+      }
       onClose();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to create timesheet");

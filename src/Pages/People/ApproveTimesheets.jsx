@@ -1,68 +1,191 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { IoCalendarNumberOutline } from "react-icons/io5";
-import { FaAngleLeft, FaAngleRight, FaCheck, FaTimes, FaEye, FaDownload } from "react-icons/fa";
+import { FaAngleLeft, FaAngleRight, FaEye } from "react-icons/fa";
 import { AnimatePresence, motion } from "framer-motion";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import timesheetApi from "../../api/timesheetApi";
-import Toast from "../../Components/Toast"; // Import your custom Toast
+import { toast } from "react-toastify";
+import TableWithPagination from "../../Components/TableWithPagination";
+import ApproveTimesheetViewModal from "../../Components/ApproveTimesheetViewModal";
 
 const ApproveTimesheets = () => {
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [timesheets, setTimesheets] = useState([]);
+  const [selectedWeekStart, setSelectedWeekStart] = useState(getMonday(new Date()));
+  const [weeklyData, setWeeklyData] = useState({
+    weekStart: getMonday(new Date()).toISOString(),
+    weekEnd: getSunday(new Date()).toISOString(),
+    timesheets: [],
+    approvedTimesheets: [],
+    weeklyTotal: 0,
+    weeklySubmitted: 0,
+    weeklyApproved: 0
+  });
   const [loading, setLoading] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [selectedTimesheet, setSelectedTimesheet] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
-  const [toast, setToast] = useState(null); // Custom toast state
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [activeTab, setActiveTab] = useState(0); // 0 = Pending, 1 = Approved
 
-  // Toast helper function
-  const showToast = (message, type = "success") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
+  const calendarRef = useRef(null);
+
+  // Tabs configuration
+  const tabs = [
+    { 
+      title: "Pending Timesheets", 
+      status: "Pending",
+      count: 0
+    },
+    { 
+      title: "Approved Timesheets", 
+      status: "Approved",
+      count: 0
+    }
+  ];
+
+  // Helper functions for week calculations
+  function getMonday(date) {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    return new Date(d.setDate(diff));
+  }
+
+  function getSunday(date) {
+    const monday = getMonday(date);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    return sunday;
+  }
+
+  function formatDate(date) {
+    const dateObj = date instanceof Date ? date : new Date(date);
+    if (isNaN(dateObj.getTime())) {
+      return "Invalid Date";
+    }
+    return dateObj.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric"
+    });
+  }
+
+  function formatWeekRange(start, end) {
+    const startDate = start instanceof Date ? start : new Date(start);
+    const endDate = end instanceof Date ? end : new Date(end);
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      return "Invalid Date Range";
+    }
+
+    return `${formatDate(startDate)} - ${formatDate(endDate)}`;
+  }
+
+  const ensureDate = (date) => {
+    if (date instanceof Date) return date;
+    if (typeof date === 'string' || typeof date === 'number') {
+      const d = new Date(date);
+      return isNaN(d.getTime()) ? new Date() : d;
+    }
+    return new Date();
   };
 
-  const getMonthYear = (date) => ({
-    month: date.getMonth() + 1,
-    year: date.getFullYear()
-  });
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (calendarRef.current && !calendarRef.current.contains(event.target)) {
+        setShowCalendar(false);
+      }
+    };
 
-  const fetchTimesheets = async () => {
+    if (showCalendar) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showCalendar]);
+
+  useEffect(() => {
+    fetchWeeklyTimesheets();
+  }, [selectedWeekStart]);
+
+  const fetchWeeklyTimesheets = async () => {
     setLoading(true);
     try {
-      const { month, year } = getMonthYear(selectedDate);
-      const response = await timesheetApi.getAllTimesheets(month, year);
-      setTimesheets(response);
+      const weekStartDate = ensureDate(selectedWeekStart);
+      const weekStartStr = weekStartDate.toISOString().split('T')[0];
+
+      const response = await timesheetApi.getWeeklyTimesheets(weekStartStr);
+      
+      // Separate timesheets by status
+      const pendingTimesheets = response.timesheets?.filter(ts => ts.status === "Pending") || [];
+      const approvedTimesheets = response.timesheets?.filter(ts => ts.status === "Approved") || [];
+      const rejectedTimesheets = response.timesheets?.filter(ts => ts.status === "Rejected") || [];
+
+      const processedResponse = {
+        ...response,
+        weekStart: response.weekStart ? new Date(response.weekStart) : getMonday(new Date()),
+        weekEnd: response.weekEnd ? new Date(response.weekEnd) : getSunday(new Date()),
+        timesheets: pendingTimesheets.map(timesheet => ({
+          ...timesheet,
+          date: timesheet.date ? new Date(timesheet.date) : null
+        })),
+        approvedTimesheets: approvedTimesheets.map(timesheet => ({
+          ...timesheet,
+          date: timesheet.date ? new Date(timesheet.date) : null
+        })),
+        rejectedTimesheets: rejectedTimesheets.map(timesheet => ({
+          ...timesheet,
+          date: timesheet.date ? new Date(timesheet.date) : null
+        })),
+        weeklyTotal: pendingTimesheets.length,
+        weeklySubmitted: pendingTimesheets.reduce((sum, ts) => sum + (ts.submittedHours || 0), 0),
+        weeklyApproved: approvedTimesheets.reduce((sum, ts) => sum + (ts.approvedHours || 0), 0)
+      };
+
+      // Update tab counts
+      tabs[0].count = pendingTimesheets.length;
+      tabs[1].count = approvedTimesheets.length;
+
+      setWeeklyData(processedResponse);
     } catch (error) {
-      console.error("Failed to fetch timesheets:", error);
-      showToast("Failed to load timesheets", "error");
+      console.error("Error loading weekly timesheets:", error);
+      toast.error("Failed to load timesheets");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchTimesheets();
-  }, [selectedDate]);
-
-  const navigateToPreviousMonth = () => {
-    const newDate = new Date(selectedDate);
-    newDate.setMonth(newDate.getMonth() - 1);
-    setSelectedDate(newDate);
+  const navigateToPreviousWeek = () => {
+    const currentDate = ensureDate(selectedWeekStart);
+    const newDate = new Date(currentDate);
+    newDate.setDate(newDate.getDate() - 7);
+    setSelectedWeekStart(getMonday(newDate));
   };
 
-  const navigateToNextMonth = () => {
-    const newDate = new Date(selectedDate);
-    newDate.setMonth(newDate.getMonth() + 1);
-    setSelectedDate(newDate);
+  const navigateToNextWeek = () => {
+    const currentDate = ensureDate(selectedWeekStart);
+    const newDate = new Date(currentDate);
+    newDate.setDate(newDate.getDate() + 7);
+    setSelectedWeekStart(getMonday(newDate));
   };
 
-  const formatDate = (date) => {
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-    });
+  const handleWeekSelect = (date) => {
+    const selectedDate = ensureDate(date);
+    setSelectedWeekStart(getMonday(selectedDate));
+    setShowCalendar(false);
+  };
+
+  const handleViewDetails = async (timesheet) => {
+    try {
+      const detailedTimesheet = await timesheetApi.getTimesheetById(timesheet._id);
+      setSelectedTimesheet(detailedTimesheet);
+      setShowDetails(true);
+    } catch (error) {
+      console.error("Failed to fetch timesheet details:", error);
+      toast.error("Failed to load details");
+    }
   };
 
   const handleStatusChange = async (timesheetId, status, approvedHours = null) => {
@@ -75,267 +198,327 @@ const ApproveTimesheets = () => {
 
       await timesheetApi.updateTimesheetStatus(timesheetId, updateData);
       
-      setTimesheets(prev => prev.map(ts => 
-        ts._id === timesheetId 
-          ? { ...ts, status, approvedHours: approvedHours !== null ? approvedHours : ts.approvedHours }
-          : ts
-      ));
+      // Update local state
+      const timesheet = weeklyData.timesheets.find(ts => ts._id === timesheetId);
       
-      showToast(`Timesheet ${status.toLowerCase()} successfully`);
+      if (timesheet) {
+        setWeeklyData(prev => {
+          const updatedTimesheet = { 
+            ...timesheet, 
+            status,
+            approvedHours: approvedHours || timesheet.approvedHours
+          };
+          
+          return {
+            ...prev,
+            timesheets: prev.timesheets.filter(ts => ts._id !== timesheetId),
+            approvedTimesheets: status === "Approved" 
+              ? [...prev.approvedTimesheets, updatedTimesheet] 
+              : prev.approvedTimesheets,
+            weeklyTotal: prev.timesheets.length - 1,
+            weeklySubmitted: prev.weeklySubmitted - (timesheet.submittedHours || 0),
+            weeklyApproved: status === "Approved" 
+              ? prev.weeklyApproved + (approvedHours || 0)
+              : prev.weeklyApproved
+          };
+        });
+      }
+      
+      // Update tab counts
+      tabs[0].count = Math.max(0, tabs[0].count - 1);
+      if (status === "Approved") {
+        tabs[1].count = tabs[1].count + 1;
+      }
+      
+      setShowDetails(false);
+      setSelectedTimesheet(null);
+      
+      toast.success(`Timesheet ${status.toLowerCase()} successfully`);
     } catch (error) {
       console.error("Failed to update timesheet:", error);
-      showToast("Failed to update timesheet", "error");
+      toast.error("Failed to update timesheet");
     } finally {
       setUpdating(false);
     }
   };
 
-  const handleViewDetails = async (timesheet) => {
-    try {
-      const detailedTimesheet = await timesheetApi.getTimesheetById(timesheet._id);
-      setSelectedTimesheet(detailedTimesheet);
-      setShowDetails(true);
-    } catch (error) {
-      console.error("Failed to fetch timesheet details:", error);
-      showToast("Failed to load details", "error");
+  const handleApprove = (timesheetId, approvedHours) => {
+    handleStatusChange(timesheetId, "Approved", approvedHours);
+  };
+
+  const handleReject = (timesheetId) => {
+    handleStatusChange(timesheetId, "Rejected", 0);
+  };
+
+  // Get current data based on active tab
+  const getCurrentData = () => {
+    switch (activeTab) {
+      case 0: // Pending
+        return weeklyData.timesheets || [];
+      case 1: // Approved
+        return weeklyData.approvedTimesheets || [];
+      default:
+        return [];
     }
   };
 
-  const handleDownloadAttachment = (attachment) => {
-    window.open(attachment.url, '_blank');
-  };
-
-  const totalSubmitted = timesheets.reduce((sum, sheet) => sum + (sheet.submittedHours || 0), 0);
-  const totalApproved = timesheets.reduce((sum, sheet) => sum + (sheet.approvedHours || 0), 0);
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Approved": return "bg-green-100 text-green-800";
-      case "Rejected": return "bg-red-100 text-red-800";
-      default: return "bg-yellow-100 text-yellow-800";
+  const getCurrentActions = () => {
+    if (activeTab === 0) { // Pending tab - show View & Approve/Reject button
+      return [
+        {
+          icon: <FaEye size={14} />,
+          title: "View & Approve/Reject",
+          className: "bg-blue-50 text-blue-600 hover:bg-blue-100",
+          onClick: (row) => handleViewDetails(row)
+        }
+      ];
+    } else { // Approved tab - show View only button
+      return [
+        {
+          icon: <FaEye size={14} />,
+          title: "View Details",
+          className: "bg-slate-50 text-slate-600 hover:bg-slate-100",
+          onClick: (row) => handleViewDetails(row)
+        }
+      ];
     }
   };
 
-  return (
-    <>
-      {/* Custom Toast Notification */}
-      {toast && (
-        <Toast 
-          message={toast.message} 
-          type={toast.type} 
-          onClose={() => setToast(null)} 
-        />
-      )}
+  const getEmptyMessage = () => {
+    const weekRange = formatWeekRange(weeklyData.weekStart, weeklyData.weekEnd);
+    if (activeTab === 0) {
+      return `No pending timesheets for ${weekRange}`;
+    } else {
+      return `No approved timesheets for ${weekRange}`;
+    }
+  };
 
-      <div className="min-h-screen bg-gray-50 p-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 bg-white p-6 rounded-lg shadow">
-          <h2 className="text-2xl font-bold text-gray-800">Approve Timesheets</h2>
+  const timesheetColumns = [
+    {
+      key: "employeeName",
+      label: "Employee",
+      sortable: true,
+      render: (row) => (
+        <span className="text-slate-700 font-medium">
+          {row.employeeName || "Unknown"}
+        </span>
+      )
+    },
+    {
+      key: "date",
+      label: "Date",
+      sortable: true,
+      render: (row) => {
+        const dateObj = ensureDate(row.date);
+        return (
+          <span className="text-slate-700 font-medium">
+            {isNaN(dateObj.getTime()) ? "Invalid Date" : dateObj.toLocaleDateString('en-US', {
+              weekday: 'short',
+              month: 'short',
+              day: 'numeric'
+            })}
+          </span>
+        );
+      }
+    },
+    {
+      key: "name",
+      label: "Timesheet Name",
+      sortable: true,
+      render: (row) => (
+        <span className="text-slate-700 font-medium">{row.name || "Unnamed"}</span>
+      )
+    },
+    {
+      key: "submittedHours",
+      label: "Submitted Hours",
+      sortable: true,
+      render: (row) => (
+        <span className="text-slate-700 font-medium">
+          {(row.submittedHours || 0).toFixed(1)}
+        </span>
+      )
+    },
+    {
+      key: "approvedHours",
+      label: activeTab === 0 ? "To Approve" : "Approved Hours",
+      sortable: true,
+      render: (row) => (
+        <span className="text-slate-700 font-medium">
+          {(row.approvedHours || 0).toFixed(1)}
+        </span>
+      )
+    },
+    {
+      key: "status",
+      label: "Status",
+      sortable: true,
+      render: (row) => (
+        <span
+          className={`px-3 py-1.5 rounded-full text-xs font-medium uppercase tracking-wide ${
+            row.status === "Approved"
+              ? "bg-green-100 text-green-800"
+              : row.status === "Rejected"
+                ? "bg-red-100 text-red-800"
+                : "bg-yellow-100 text-yellow-800"
+          }`}
+        >
+          {row.status || "Pending"}
+        </span>
+      )
+    }
+  ];
 
-          <div className="flex items-center gap-3">
+return (
+    <div className="font-sans text-slate-600">
+      
+      {/* 1. TOP ROW: Tabs & Action Button */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+        
+        {/* Toggle Tabs - Styled like Screenshot Pill */}
+        <div className="bg-white/80 backdrop-blur-sm p-3 rounded-xl shadow-sm inline-flex">
+          {tabs.map((item, index) => (
             <button
-              onClick={navigateToPreviousMonth}
-              className="p-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
-              disabled={loading}
+              key={index}
+              onClick={() => setActiveTab(index)}
+              className={`
+                px-6 py-2 rounded-xl text-sm font-semibold transition-all duration-200
+                ${activeTab === index 
+                  ? "bg-white text-slate-900 shadow-[0_2px_8px_rgba(0,0,0,0.1)]" 
+                  : "text-slate-500 hover:bg-slate-50"
+                }
+              `}
             >
-              <FaAngleLeft size={16} />
+              {item.title}
+              {/* Optional: Counter Badge */}
+              {item.count > 0 && (
+                <span className={`ml-2 px-1.5 py-0.5 rounded-full text-[10px] ${activeTab === index ? 'bg-blue-100 text-blue-700' : 'bg-slate-200 text-slate-600'}`}>
+                  {item.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 2. SECOND ROW: Navigation Bar / "Time Logs" Header */}
+      <div className="bg-white rounded-[1.5rem] shadow-sm border border-slate-100 p-3 mb-4 flex flex-col lg:flex-row items-center justify-between gap-4">
+        
+        {/* Left: Section Title */}
+        <div className="pl-4">
+            <h2 className="text-base font-bold text-slate-800 uppercase tracking-tight">
+                {tabs[activeTab].title}
+            </h2>
+        </div>
+
+        {/* Center: Date Navigation (Blue Theme) */}
+        <div className="flex items-center gap-3 bg-slate-50/50 p-1 rounded-xl">
+          <button
+            onClick={navigateToPreviousWeek}
+            disabled={loading}
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
+          >
+            <FaAngleLeft size={16} />
+          </button>
+
+          <div className="relative" ref={calendarRef}>
+            <button
+              onClick={() => setShowCalendar(!showCalendar)}
+              disabled={loading}
+              className="h-10 px-4 flex items-center gap-2 bg-blue-100 text-blue-700 rounded-xl font-semibold text-sm hover:bg-blue-200 transition-colors min-w-[180px] justify-center"
+            >
+              <IoCalendarNumberOutline size={18} />
+              <span>{formatWeekRange(weeklyData.weekStart, weeklyData.weekEnd)}</span>
             </button>
 
-            <div className="relative">
-              <button
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg flex items-center gap-2 hover:bg-blue-600 transition-colors"
-                onClick={() => setShowCalendar(!showCalendar)}
-                disabled={loading}
-              >
-                <IoCalendarNumberOutline size={20} />
-                <span className="text-sm">{formatDate(selectedDate)}</span>
-              </button>
-
+            <AnimatePresence>
               {showCalendar && (
-                <div className="absolute z-50 mt-2 bg-white shadow-xl rounded-lg border">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute top-12 left-1/2 -translate-x-1/2 z-50 bg-white shadow-xl rounded-2xl border border-slate-100 overflow-hidden"
+                >
                   <DatePicker
-                    selected={selectedDate}
-                    onChange={(date) => {
-                      setSelectedDate(date);
-                      setShowCalendar(false);
-                    }}
-                    dateFormat="MM/yyyy"
-                    showMonthYearPicker
+                    selected={ensureDate(selectedWeekStart)}
+                    onChange={handleWeekSelect}
                     inline
                   />
-                </div>
+                </motion.div>
               )}
-            </div>
-
-            <button
-              onClick={navigateToNextMonth}
-              className="p-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
-              disabled={loading}
-            >
-              <FaAngleRight size={16} />
-            </button>
+            </AnimatePresence>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4">
-            <span className="text-sm text-gray-600">
-              Submitted: <strong>{totalSubmitted.toFixed(2)}h</strong>
-            </span>
-            <span className="text-sm text-gray-600">
-              Approved: <strong>{totalApproved.toFixed(2)}h</strong>
-            </span>
-          </div>
+          <button
+            onClick={navigateToNextWeek}
+            disabled={loading}
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors"
+          >
+            <FaAngleRight size={16} />
+          </button>
         </div>
 
-        {/* Timesheets Table */}
-        <div className="bg-white rounded-xl shadow overflow-hidden">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={selectedDate.getTime()}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              {loading ? (
-                <div className="text-center p-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                  <p className="mt-3 text-gray-600">Loading timesheets...</p>
-                </div>
-              ) : timesheets.length === 0 ? (
-                <div className="text-center p-12">
-                  <p className="text-gray-500">No timesheets found for {formatDate(selectedDate)}</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
-                    <thead className="bg-gray-50 text-gray-700">
-                      <tr>
-                        {["Employee", "Timesheet Name", "Date", "Submitted Hours", "Approved Hours", "Status", "Actions"].map((heading) => (
-                          <th key={heading} className="px-6 py-4 font-semibold border-b border-gray-200">
-                            {heading}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {timesheets.map((timesheet) => (
-                        <tr key={timesheet._id} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
-                          <td className="px-6 py-4">{timesheet.employeeName}</td>
-                          <td className="px-6 py-4 font-medium">{timesheet.name}</td>
-                          <td className="px-6 py-4">{new Date(timesheet.date).toLocaleDateString()}</td>
-                          <td className="px-6 py-4">{timesheet.submittedHours}</td>
-                          <td className="px-6 py-4">{timesheet.approvedHours}</td>
-                          <td className="px-6 py-4">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(timesheet.status)}`}>
-                              {timesheet.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => handleViewDetails(timesheet)}
-                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                disabled={updating}
-                              >
-                                <FaEye size={14} />
-                              </button>
-                              <button
-                                onClick={() => handleStatusChange(timesheet._id, "Approved", timesheet.submittedHours)}
-                                className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                                disabled={updating || timesheet.status === "Approved"}
-                              >
-                                <FaCheck size={14} />
-                              </button>
-                              <button
-                                onClick={() => handleStatusChange(timesheet._id, "Rejected", 0)}
-                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                disabled={updating || timesheet.status === "Rejected"}
-                              >
-                                <FaTimes size={14} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-        {/* Timesheet Details Modal */}
-        {showDetails && selectedTimesheet && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-bold text-gray-800">
-                    Timesheet Details - {selectedTimesheet.name}
-                  </h3>
-                  <button onClick={() => setShowDetails(false)} className="p-2 text-gray-400 hover:text-gray-600">
-                    <FaTimes size={20} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-6 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Employee</label>
-                    <p className="text-gray-900">{selectedTimesheet.employeeName}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
-                    <p className="text-gray-900">{new Date(selectedTimesheet.date).toLocaleDateString()}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Submitted Hours</label>
-                    <p className="text-gray-900">{selectedTimesheet.submittedHours}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedTimesheet.status)}`}>
-                      {selectedTimesheet.status}
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                  <p className="text-gray-900 bg-gray-50 p-4 rounded-lg">{selectedTimesheet.description || "No description provided"}</p>
-                </div>
-
-                {/* Logs and Attachments (simplified for brevity, keeping your original structure) */}
-                {selectedTimesheet.timeLogs?.length > 0 && (
-                   <div className="space-y-3">
-                     <label className="block text-sm font-medium text-gray-700">Time Logs</label>
-                     {selectedTimesheet.timeLogs.map(log => (
-                       <div key={log._id} className="bg-gray-50 p-4 rounded-lg text-sm">
-                         <strong>{log.job}:</strong> {log.hours}h - {log.description}
-                       </div>
-                     ))}
-                   </div>
-                )}
-              </div>
-
-              <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
-                <button onClick={() => setShowDetails(false)} className="px-6 py-2 border rounded-lg">Close</button>
-                {selectedTimesheet.status !== "Approved" && (
-                  <button
-                    onClick={() => { handleStatusChange(selectedTimesheet._id, "Approved", selectedTimesheet.submittedHours); setShowDetails(false); }}
-                    className="px-6 py-2 bg-green-500 text-white rounded-lg"
-                  >
-                    Approve
-                  </button>
-                )}
-              </div>
+        {/* Right: Summary Stat Pill */}
+        <div className="pr-1">
+            <div className="bg-blue-50 text-blue-900 px-5 py-2.5 rounded-xl flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wide opacity-70">
+                    {activeTab === 0 ? "Submitted Hours:" : "Approved Hours:"}
+                </span>
+                <span className="text-sm font-extrabold">
+                    {activeTab === 0 
+                        ? (weeklyData.weeklySubmitted || 0).toFixed(2) 
+                        : (weeklyData.approvedTimesheets?.reduce((sum, ts) => sum + (ts.approvedHours || 0), 0) || 0).toFixed(2)
+                    }
+                </span>
             </div>
-          </div>
-        )}
+        </div>
       </div>
-    </>
+
+      {/* 3. THIRD SECTION: The Table */}
+      <div className="rounded-[1.5rem] shadow-sm border border-slate-100 overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`${activeTab}-${selectedWeekStart}`}
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            transition={{ duration: 0.2 }}
+          >
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+                <p className="text-sm font-medium text-slate-500">Loading data...</p>
+              </div>
+            ) : (
+              <TableWithPagination
+                columns={timesheetColumns}
+                data={getCurrentData()}
+                loading={loading}
+                emptyMessage={getEmptyMessage()}
+                rowsPerPage={10}
+                actions={getCurrentActions()}
+                onRowClick={(row) => handleViewDetails(row)}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Modal */}
+      {showDetails && selectedTimesheet && (
+        <ApproveTimesheetViewModal
+          timesheet={selectedTimesheet}
+          onClose={() => {
+            setShowDetails(false);
+            setSelectedTimesheet(null);
+          }}
+          onApprove={activeTab === 0 ? handleApprove : undefined}
+          onReject={activeTab === 0 ? handleReject : undefined}
+          loading={updating}
+          isApprovedTab={activeTab === 1}
+        />
+      )}
+    </div>
   );
 };
 
